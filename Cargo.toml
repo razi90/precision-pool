@@ -1,4 +1,8 @@
-workspace = { members = ["test_helper", "test_hook"] }
+[workspace]
+members = [
+    "test_helper",
+    "test_hook"
+]
 
 [package]
 name = "precision_pool"
