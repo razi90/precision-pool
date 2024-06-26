@@ -1,0 +1,52 @@
+#[cfg(test)]
+mod precision_pool_oracle {
+    use common::pools::SwapType;
+    use scrypto::prelude::*;
+    use scrypto_testenv::TestHelperExecution;
+    use precision_pool_test_helper::*;
+
+    #[test]
+    fn test_oracle_last_observation_index() {
+        let mut helper = PoolTestHelper::new();
+        helper.instantiate_default(pdec!(1.1), false);
+        helper.add_liquidity_success(
+            -10000,
+            10000,
+            dec!(10000),
+            dec!(15000),
+            dec!(803.246769859789666171),
+            dec!(0),
+        );
+        helper.jump_to_timestamp_minutes(15);
+        helper.swap_success(
+            SwapType::SellX,
+            Decimal::ONE,
+            dec!("1.20995621575035767"),
+            dec!(0),
+        );
+        helper.jump_to_timestamp_minutes(30);
+        helper.swap_success(
+            SwapType::BuyX,
+            Decimal::ONE,
+            dec!("0.826481376795724754"),
+            dec!(0),
+        );
+        helper.jump_to_timestamp_minutes(45);
+        helper.swap_success(
+            SwapType::SellX,
+            Decimal::ONE,
+            dec!("1.209941021402946331"),
+            dec!(0),
+        );
+        helper.jump_to_timestamp_minutes(60);
+
+        let receipt = helper
+            .last_observation_index()
+            .registry
+            .execute_expect_success(false);
+        let outputs: Vec<Option<u16>> = receipt.outputs("last_observation_index");
+        println!("Last observation index: {:?}", outputs);
+
+        assert_eq!(outputs, vec![Some(1)]);
+    }
+}
