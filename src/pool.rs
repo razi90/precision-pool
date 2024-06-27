@@ -1,7 +1,7 @@
 use crate::{constants::*, pool_math::*, utils::*};
 use precision_pool_hooks::*;
 use common::math::*;
-use common::oracle::{AccumulatedObservation, ObservationInterval, Oracle};
+use oracle::{AccumulatedObservation, ObservationInterval, Oracle};
 use common::pools::{token_symbol, SwapType};
 use common::time::*;
 use common::utils::*;
