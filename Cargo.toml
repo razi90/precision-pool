@@ -31,7 +31,7 @@ pretty_assertions = "1.3.0"
 test-case = "3"
 
 [lib]
-crate-type = ["lib"]
+crate-type = ["cdylib", "lib"]
 doctest = false
 
 [profile.dev]
