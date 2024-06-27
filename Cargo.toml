@@ -10,6 +10,9 @@ name = "precision_pool"
 version = "1.0.2"
 edition = "2021"
 
+[net]
+git-fetch-with-cli = true
+
 [dependencies]
 sbor = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v1.1.1" }
 scrypto = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v1.1.1" }
