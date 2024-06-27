@@ -31,9 +31,9 @@ impl TestHelperExecution for HookTestTestHelper {
 impl HookTestTestHelper {
     pub fn new() -> HookTestTestHelper {
         let packages: HashMap<&str, &str> = vec![
-            ("registry", "registry"),
-            ("precision_pool", "."),
-            ("test_hook", "test_hook"),
+            ("registry", "../registry"),
+            ("precision_pool", ".."),
+            ("test_hook", "."),
         ]
         .into_iter()
         .collect();
