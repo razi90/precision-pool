@@ -26,7 +26,7 @@ TAKE_FROM_WORKTOP
     Bucket("y_bucket_1")
 ;
 CALL_FUNCTION
-    Address("package_sim1p5eg9cg06z3qesfp3jmq3lsq3fdmk4pgcg46s4k7raxdtw8ql4fg9a")
+    Address("package_sim1p5tk86x78nq08k9q8hy9n7w99fv5zefkekeujkyerkrtydzunvrpzu")
     "PrecisionPool"
     "instantiate_with_liquidity"
     Bucket("x_bucket_1")

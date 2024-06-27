@@ -1,10 +1,10 @@
 use crate::{constants::*, pool_math::*, utils::*};
-use precision_pool_hooks::*;
 use common::math::*;
-use oracle::{AccumulatedObservation, ObservationInterval, Oracle};
 use common::pools::{token_symbol, SwapType};
 use common::time::*;
 use common::utils::*;
+use oracle::{AccumulatedObservation, ObservationInterval, Oracle};
+use precision_pool_hooks::*;
 use scrypto::prelude::*;
 use scrypto_avltree::*;
 use std::ops::Bound;

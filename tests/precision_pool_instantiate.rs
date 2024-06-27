@@ -5,12 +5,12 @@ mod precision_pool_instantiate {
         constants::{FLASH_LOAN_FEE_RATE_MAX, INPUT_FEE_RATE_MAX},
         pool_math::tick_to_price_sqrt,
     };
+    use precision_pool_test_helper::*;
     use pretty_assertions::assert_eq;
     use scrypto::prelude::*;
     use scrypto_testenv::*;
     use std::iter::zip;
     use test_case::test_case;
-    use precision_pool_test_helper::*;
 
     // INSTANTIATE
 

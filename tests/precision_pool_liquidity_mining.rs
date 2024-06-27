@@ -1,9 +1,9 @@
 use common::math::*;
 use common::pools::SwapType;
 use precision_pool::pool_math::tick_to_price_sqrt;
+use precision_pool_test_helper::*;
 use scrypto::prelude::*;
 use scrypto_testenv::*;
-use precision_pool_test_helper::*;
 
 const EXADECIMAL: Decimal = dec!(1_000_000_000_000_000_000);
 

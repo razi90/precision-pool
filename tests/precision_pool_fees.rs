@@ -3,10 +3,10 @@ mod precision_pool_fees {
     use common::math::*;
     use common::pools::SwapType;
     use precision_pool::pool_math::tick_to_price_sqrt;
+    use precision_pool_test_helper::reverse_swap_type;
+    use precision_pool_test_helper::*;
     use scrypto::prelude::*;
     use scrypto_testenv::*;
-    use precision_pool_test_helper::*;
-    use precision_pool_test_helper::reverse_swap_type;
 
     // LIQUIDITY FEES
 

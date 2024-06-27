@@ -1,5 +1,5 @@
-use precision_pool::pool_math::tick_to_price_sqrt;
 use lazy_static::lazy_static;
+use precision_pool::pool_math::tick_to_price_sqrt;
 use scrypto::prelude::*;
 
 pub const DEC_5: Decimal = dec!(5);
