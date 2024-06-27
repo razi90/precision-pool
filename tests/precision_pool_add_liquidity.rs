@@ -2,6 +2,7 @@
 mod precision_pool_add_liquidity {
     use common::math::*;
     use precision_pool::pool_math::tick_to_price_sqrt;
+    use precision_pool_test_helper::*;
     use pretty_assertions::assert_eq;
     use radix_engine::system::system_modules::execution_trace::{
         ResourceSpecifier::Amount, ResourceSpecifier::Ids,
@@ -9,7 +10,6 @@ mod precision_pool_add_liquidity {
     use scrypto::prelude::*;
     use scrypto_testenv::*;
     use test_case::test_case;
-    use precision_pool_test_helper::*;
 
     #[test]
     fn test_add_liquidity_invalid_token_both() {

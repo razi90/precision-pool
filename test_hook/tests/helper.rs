@@ -1,10 +1,10 @@
 use precision_pool_hooks::HookCall;
+use precision_pool_test_helper::constants::DEC_10;
+use precision_pool_test_helper::{LiquidityPosition, PoolTestHelper};
+use precision_pool_test_helper::{TICK_LEFT_BOUND, TICK_RIGHT_BOUND};
 use scrypto::prelude::*;
 use scrypto_testenv::*;
 use std::mem;
-use precision_pool_test_helper::{LiquidityPosition, PoolTestHelper};
-use precision_pool_test_helper::{TICK_LEFT_BOUND, TICK_RIGHT_BOUND};
-use precision_pool_test_helper::constants::DEC_10;
 use test_hook::test_hook::TestAccess;
 use transaction::prelude::ManifestBuilder;
 

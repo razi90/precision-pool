@@ -1,9 +1,9 @@
 use std::cmp::{max, min};
 use std::ops::{Add, Sub};
 
-use precision_pool_hooks::AfterSwapState;
 use common::math::*;
 use common::pools::SwapType;
+use precision_pool_hooks::AfterSwapState;
 use scrypto::prelude::*;
 
 use crate::constants::{DIVISIBILITY_UNITS, TICK_BASE_SQRT};

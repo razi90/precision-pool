@@ -1,5 +1,4 @@
 use crate::constants::*;
-use registry_test_helper::RegistryTestHelper;
 use common::math::AttoDecimal;
 use common::pools::SwapType;
 use precision_pool::pool;
@@ -7,6 +6,7 @@ use pretty_assertions::assert_eq;
 use radix_engine::system::system_modules::execution_trace::{
     ResourceSpecifier, ResourceSpecifier::Amount, ResourceSpecifier::Ids,
 };
+use registry_test_helper::RegistryTestHelper;
 use scrypto::prelude::*;
 use std::mem;
 
@@ -48,12 +48,9 @@ impl PoolTestHelper {
     }
 
     fn new_internal(instantiate_registry: bool) -> PoolTestHelper {
-        let packages: HashMap<&str, &str> = vec![
-            ("registry", "registry"),
-            ("precision_pool", "."),
-        ]
-        .into_iter()
-        .collect();
+        let packages: HashMap<&str, &str> = vec![("registry", "registry"), ("precision_pool", ".")]
+            .into_iter()
+            .collect();
         Self::new_with_packages(packages, instantiate_registry)
     }
 

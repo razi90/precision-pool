@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod precision_pool_remove_liquidity {
     use common::pools::SwapType;
+    use precision_pool_test_helper::*;
     use scrypto::prelude::*;
     use scrypto_testenv::*;
-    use precision_pool_test_helper::*;
 
     static ONE_LP: [LiquidityPosition; 1] = [LiquidityPosition {
         left_bound: TICK_LEFT_BOUND,

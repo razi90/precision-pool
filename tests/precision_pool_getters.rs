@@ -1,10 +1,10 @@
+use precision_pool_test_helper::*;
 use pretty_assertions::assert_eq;
 use radix_engine::system::system_modules::execution_trace::ResourceSpecifier;
 use scrypto::prelude::*;
 use scrypto_testenv::environment::TestHelperExecution;
 use scrypto_testenv::nft_ids;
 use test_case::test_case;
-use precision_pool_test_helper::*;
 
 #[test_case(1)]
 #[test_case(2)]

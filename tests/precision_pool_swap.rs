@@ -4,11 +4,11 @@ mod precision_pool_swap {
     use common::pools::SwapType;
     use precision_pool::constants::INPUT_FEE_RATE_MAX;
     use precision_pool::pool_math::tick_to_price_sqrt;
+    use precision_pool_test_helper::*;
     use pretty_assertions::assert_eq;
     use scrypto::prelude::*;
     use scrypto_testenv::*;
     use test_case::test_case;
-    use precision_pool_test_helper::*;
 
     static NO_LP: [LiquidityPosition; 0] = [];
 

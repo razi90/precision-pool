@@ -1,5 +1,5 @@
-use precision_pool_hooks::*;
 use common::pools::SwapType;
+use precision_pool_hooks::*;
 use scrypto::prelude::*;
 
 #[blueprint]

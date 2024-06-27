@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod precision_pool_oracle {
     use common::pools::SwapType;
+    use precision_pool_test_helper::*;
     use scrypto::prelude::*;
     use scrypto_testenv::TestHelperExecution;
-    use precision_pool_test_helper::*;
 
     #[test]
     fn test_oracle_last_observation_index() {

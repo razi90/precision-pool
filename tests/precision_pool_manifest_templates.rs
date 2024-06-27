@@ -3,10 +3,10 @@ mod precision_pool_manifest_templates {
     use std::mem;
 
     // INSTANTIATE
+    use precision_pool_test_helper::*;
     use scrypto::prelude::*;
     use scrypto_testenv::nft_ids;
     use scrypto_unit::dump_manifest_to_file_system;
-    use precision_pool_test_helper::*;
 
     #[test]
     fn test_dump_instantiate() {
