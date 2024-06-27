@@ -1,7 +1,7 @@
 use std::cmp::{max, min};
 use std::ops::{Add, Sub};
 
-use common::hooks::AfterSwapState;
+use precision_pool_hooks::AfterSwapState;
 use common::math::*;
 use common::pools::SwapType;
 use scrypto::prelude::*;

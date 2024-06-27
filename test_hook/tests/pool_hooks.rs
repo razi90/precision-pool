@@ -3,7 +3,7 @@ mod helper;
 #[cfg(test)]
 mod test_hook_precision_pool {
     use super::*;
-    use common::hooks::HookCall;
+    use precision_pool_hooks::HookCall;
     use helper::HookTestTestHelper;
     use scrypto::prelude::*;
     use test_hook::test_hook::TestAccess;

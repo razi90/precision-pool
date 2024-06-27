@@ -1,4 +1,4 @@
-use common::hooks::HookCall;
+use precision_pool_hooks::HookCall;
 use scrypto::prelude::*;
 use scrypto_testenv::*;
 use std::mem;

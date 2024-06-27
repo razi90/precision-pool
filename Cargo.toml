@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "hooks",
     "test_helper",
     "test_hook"
 ]
@@ -13,8 +14,8 @@ edition = "2021"
 sbor = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v1.1.1" }
 scrypto = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v1.1.1" }
 scrypto_avltree = { git = "https://github.com/ociswap/scrypto-avltree", tag = "v1.1.0" }
-# common = { git = "https://github.com/ociswap/pools-common" }
-common = { git = "ssh://git@github.com/ociswap/pools-common.git" }
+common = { git = "https://github.com/ociswap/pools-common" }
+precision_pool_hooks = { path = "hooks" }
 
 [dev-dependencies]
 transaction = { git = "https://github.com/radixdlt/radixdlt-scrypto", tag = "v1.1.1" }

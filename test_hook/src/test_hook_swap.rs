@@ -1,4 +1,4 @@
-use common::hooks::*;
+use precision_pool_hooks::*;
 use scrypto::prelude::*;
 
 #[blueprint]
