@@ -603,8 +603,8 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
 name = "oracle"
-version = "1.0.6"
-source = "git+ssh://git@github.com/ociswap/oracle.git?tag=v1.0.6#664fd5eee8a00dccb800245896842d0f68f46182"
+version = "1.0.7"
+source = "git+ssh://git@github.com/ociswap/oracle.git?tag=v1.0.7#799c3d569a4152dcc4679b75b60bc4f76121f49d"
 dependencies = [
  "common",
  "pretty_assertions",
