@@ -631,9 +631,9 @@ dependencies = [
 
 [[package]]
 name = "num-bigint"
-version = "0.4.5"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c165a9ab64cf766f73521c0dd2cfdff64f488b8f0b3e621face3462d3db536d7"
+checksum = "a5e44f723f1133c9deac646763579fdb3ac745e418f2a7af9cd0c431da1f20b9"
 dependencies = [
  "num-integer",
  "num-traits",
@@ -757,15 +757,9 @@ dependencies = [
  "common",
  "oracle",
  "precision_pool_hooks",
- "precision_pool_test_helper",
- "pretty_assertions",
- "radix-engine",
  "sbor",
  "scrypto",
- "scrypto-test",
  "scrypto_avltree",
- "scrypto_testenv",
- "test-case",
 ]
 
 [[package]]
@@ -1616,36 +1610,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "test-case"
-version = "3.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb2550dd13afcd286853192af8601920d959b14c401fcece38071d53bf0768a8"
+name = "test_hook"
+version = "0.1.0"
 dependencies = [
- "test-case-macros",
-]
-
-[[package]]
-name = "test-case-core"
-version = "3.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "adcb7fd841cd518e279be3d5a3eb0636409487998a4aff22f3de87b81e88384f"
-dependencies = [
- "cfg-if",
- "proc-macro2",
- "quote",
- "syn 2.0.68",
-]
-
-[[package]]
-name = "test-case-macros"
-version = "3.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c89e72a01ed4c579669add59014b9a524d609c0c88c6a585ce37485879f6ffb"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.68",
- "test-case-core",
+ "common",
+ "lazy_static",
+ "precision_pool_hooks",
+ "precision_pool_test_helper",
+ "pretty_assertions",
+ "radix-transactions",
+ "sbor",
+ "scrypto",
+ "scrypto_math",
+ "scrypto_testenv",
 ]
 
 [[package]]
