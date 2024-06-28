@@ -164,7 +164,7 @@ dependencies = [
 [[package]]
 name = "common"
 version = "1.0.5"
-source = "git+https://github.com/ociswap/pools-common#358255af17b8b002435b390cbc25d67cfa347c96"
+source = "git+https://github.com/ociswap/pools-common?tag=v1.0.5#358255af17b8b002435b390cbc25d67cfa347c96"
 dependencies = [
  "sbor",
  "scrypto",
@@ -603,8 +603,8 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
 name = "oracle"
-version = "1.0.5"
-source = "git+ssh://git@github.com/ociswap/oracle.git#1012c5e9deb6d7bfcf7afe702fab24f38836d8dd"
+version = "1.0.6"
+source = "git+ssh://git@github.com/ociswap/oracle.git?tag=v1.0.6#664fd5eee8a00dccb800245896842d0f68f46182"
 dependencies = [
  "common",
  "pretty_assertions",
@@ -1014,7 +1014,6 @@ checksum = "dbb5fb1acd8a1a18b3dd5be62d25485eb770e05afb408a9627d14d451bae12da"
 name = "registry_test_helper"
 version = "0.1.1"
 dependencies = [
- "common",
  "lazy_static",
  "pretty_assertions",
  "radix-engine",
