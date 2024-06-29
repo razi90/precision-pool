@@ -2,11 +2,11 @@ use precision_pool_hooks::HookCall;
 use precision_pool_test_helper::constants::DEC_10;
 use precision_pool_test_helper::{LiquidityPosition, PoolTestHelper};
 use precision_pool_test_helper::{TICK_LEFT_BOUND, TICK_RIGHT_BOUND};
+use radix_transactions::prelude::ManifestBuilder;
 use scrypto::prelude::*;
 use scrypto_testenv::*;
 use std::mem;
 use test_hook::test_hook::TestAccess;
-use transaction::prelude::ManifestBuilder;
 
 static ONE_LP: [LiquidityPosition; 1] = [LiquidityPosition {
     left_bound: TICK_LEFT_BOUND,

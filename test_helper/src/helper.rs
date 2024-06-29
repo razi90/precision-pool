@@ -10,8 +10,8 @@ use registry_test_helper::RegistryTestHelper;
 use scrypto::prelude::*;
 use std::mem;
 
+use radix_transactions::builder::ManifestBuilder;
 use scrypto_testenv::*;
-use transaction::builder::ManifestBuilder;
 
 static ONE_LP: [LiquidityPosition; 1] = [LiquidityPosition {
     left_bound: TICK_LEFT_BOUND,
