@@ -1,6 +1,6 @@
 [package]
 name = "precision_pool"
-version = "1.1.0"
+version = "1.1.1"
 edition = "2021"
 
 [net]
@@ -10,8 +10,8 @@ git-fetch-with-cli = true
 sbor = "1.2.0"
 scrypto = "1.2.0"
 scrypto_avltree = { git = "https://github.com/ociswap/scrypto-avltree", tag = "v1.2.0" }
-common = { git = "https://github.com/ociswap/pools-common", tag = "v1.1.0" }
-oracle = { git = "ssh://git@github.com/ociswap/oracle.git", tag = "v1.1.0" }
+common = { git = "https://github.com/ociswap/pools-common", tag = "v1.1.1" }
+oracle = { git = "ssh://git@github.com/ociswap/oracle.git", tag = "v1.1.1" }
 precision_pool_hooks = { path = "hooks" }
 
 [dev-dependencies]
