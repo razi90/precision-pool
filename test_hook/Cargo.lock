@@ -158,9 +158,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.0.101"
+version = "1.0.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac367972e516d45567c7eafc73d24e1c193dcf200a8d94e9db7b3d38b349572d"
+checksum = "2755ff20a1d93490d26ba33a6f092a38a508398a5320df5d4b3014fcccce9410"
 dependencies = [
  "jobserver",
  "libc",
@@ -204,8 +204,8 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "1.1.0"
-source = "git+https://github.com/ociswap/pools-common?tag=v1.1.0#2542b027aa39cb165cfb4b239efa3343a747d738"
+version = "1.1.1"
+source = "git+https://github.com/ociswap/pools-common?tag=v1.1.1#b2fd6feba0a2124d4485aecb292758dfca2a3e6c"
 dependencies = [
  "sbor",
  "scrypto",
@@ -681,11 +681,10 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
 name = "oracle"
-version = "1.1.0"
-source = "git+ssh://git@github.com/ociswap/oracle.git?tag=v1.1.0#12f0b31d8c73e380f53c450096e9f7374274e36a"
+version = "1.1.1"
+source = "git+ssh://git@github.com/ociswap/oracle.git?tag=v1.1.1#a31e0b22cd7adefb2dc265ec5a81529402fe8f81"
 dependencies = [
  "common",
- "pretty_assertions",
  "sbor",
  "scrypto",
  "scrypto_math",
@@ -752,7 +751,7 @@ checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 
 [[package]]
 name = "precision_pool"
-version = "1.0.2"
+version = "1.1.1"
 dependencies = [
  "common",
  "oracle",
