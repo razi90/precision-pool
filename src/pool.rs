@@ -1913,13 +1913,12 @@ mod precision_pool {
                     Some(pair_symbol) => (
                         format!("Ociswap Precision Pool {}", pair_symbol).to_owned(),
                         format!("Ociswap LP {}", pair_symbol).to_owned(),
-                        format!("Ociswap LP token for the Precision Pool {}", pair_symbol)
-                            .to_owned(),
+                        format!("Ociswap LP token for Precision Pool {}", pair_symbol).to_owned(),
                     ),
                     None => (
                         "Ociswap Precision Pool".to_owned(),
                         "Ociswap LP".to_owned(),
-                        "Ociswap LP token for the Precision Pool".to_owned(),
+                        "Ociswap LP token for Precision Pool".to_owned(),
                     ),
                 };
             (pool_name, lp_name, lp_description)
