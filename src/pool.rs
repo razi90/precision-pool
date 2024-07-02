@@ -210,7 +210,7 @@ mod precision_pool {
             let (address_reservation, pool_address) =
                 Runtime::allocate_component_address(PrecisionPool::blueprint_id());
             let (pool_name, lp_name, lp_description) =
-                Self::names_and_description(x_address, y_address);
+                Self::names_and_lp_description(x_address, y_address);
             let lp_manager =
                 Self::set_lp_manager(pool_address, lp_name, lp_description, dapp_definition);
 
@@ -1902,7 +1902,7 @@ mod precision_pool {
         /// - `pool_name`: The name of the pool.
         /// - `lp_name`: The name of the LP token.
         /// - `lp_description`: The description of the LP token.
-        fn names_and_description(
+        fn names_and_lp_description(
             x_address: ResourceAddress,
             y_address: ResourceAddress,
         ) -> (String, String, String) {
