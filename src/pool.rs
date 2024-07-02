@@ -261,7 +261,7 @@ mod precision_pool {
                 hook_calls,
                 hook_badges: hook_badges_vault,
                 hooks,
-                oracle: Oracle::new(),
+                oracle: Oracle::new(u16::MAX),
             })
             .instantiate()
             .prepare_to_globalize(OwnerRole::None)
