@@ -209,8 +209,10 @@ mod precision_pool {
             // Reserve an address for the new pool and set up LP token management.
             let (address_reservation, pool_address) =
                 Runtime::allocate_component_address(PrecisionPool::blueprint_id());
+            let (pool_name, lp_name, lp_description) =
+                Self::names_and_description(x_address, y_address);
             let lp_manager =
-                Self::set_lp_manager(pool_address, x_address, y_address, dapp_definition);
+                Self::set_lp_manager(pool_address, lp_name, lp_description, dapp_definition);
 
             // Set up a resource manager for flash loans.
             let flash_manager =
@@ -270,9 +272,11 @@ mod precision_pool {
             .metadata(metadata! {
                 init {
                     "pool_address" => pool_address, locked;
+                    "name" => pool_name, locked;
                     "lp_address" => lp_manager.address(), locked;
                     "x_address" => x_address, locked;
                     "y_address" => y_address, locked;
+                    "flash_loan_address" => flash_manager.address(), locked;
                     "tick_spacing" => tick_spacing, locked;
                     "input_fee_rate" => input_fee_rate, locked;
                     "flash_loan_fee_rate" => flash_loan_fee_rate, locked;
@@ -298,6 +302,7 @@ mod precision_pool {
                 lp_address: lp_manager.address(),
                 x_address,
                 y_address,
+                flash_loan_address: flash_manager.address(),
                 price_sqrt,
                 tick_spacing,
                 input_fee_rate,
@@ -1883,6 +1888,43 @@ mod precision_pool {
                 .map(|hook| hook.to_owned())
         }
 
+        /// Generates names and descriptions for the pool and LP tokens.
+        ///
+        /// This function constructs the names and descriptions for the pool and its associated LP tokens
+        /// based on the symbols of the provided resource addresses.
+        ///
+        /// # Arguments
+        /// * `x_address` - The resource address of the first asset in the pool.
+        /// * `y_address` - The resource address of the second asset in the pool.
+        ///
+        /// # Returns
+        /// A tuple containing:
+        /// - `pool_name`: The name of the pool.
+        /// - `lp_name`: The name of the LP token.
+        /// - `lp_description`: The description of the LP token.
+        fn names_and_description(
+            x_address: ResourceAddress,
+            y_address: ResourceAddress,
+        ) -> (String, String, String) {
+            let x_symbol = token_symbol(x_address);
+            let y_symbol = token_symbol(y_address);
+            let (pool_name, lp_name, lp_description) =
+                match x_symbol.zip(y_symbol).map(|(x, y)| format!("{}/{}", x, y)) {
+                    Some(pair_symbol) => (
+                        format!("Ociswap Precision Pool {}", pair_symbol).to_owned(),
+                        format!("Ociswap LP {}", pair_symbol).to_owned(),
+                        format!("Ociswap LP token for the Precision Pool {}", pair_symbol)
+                            .to_owned(),
+                    ),
+                    None => (
+                        "Ociswap Precision Pool".to_owned(),
+                        "Ociswap LP".to_owned(),
+                        "Ociswap LP token for the Precision Pool".to_owned(),
+                    ),
+                };
+            (pool_name, lp_name, lp_description)
+        }
+
         /// Sets up a liquidity position manager for a specific pool.
         ///
         /// This function initializes a non-fungible resource manager for liquidity positions in a pool,
@@ -1899,24 +1941,10 @@ mod precision_pool {
         /// A `ResourceManager` that can manage the non-fungible tokens representing liquidity positions.
         fn set_lp_manager(
             pool_address: ComponentAddress,
-            x_address: ResourceAddress,
-            y_address: ResourceAddress,
+            name: String,
+            description: String,
             dapp_definition: ComponentAddress,
         ) -> ResourceManager {
-            let x_symbol = token_symbol(x_address);
-            let y_symbol = token_symbol(y_address);
-            let (name, description) =
-                match x_symbol.zip(y_symbol).map(|(x, y)| format!("{}/{}", x, y)) {
-                    Some(pair_symbol) => (
-                        format!("Ociswap LP {}", pair_symbol).to_owned(),
-                        format!("Ociswap LP token for the {} Precision Pool", pair_symbol)
-                            .to_owned(),
-                    ),
-                    None => (
-                        "Ociswap LP".to_owned(),
-                        "Ociswap LP token for the Precision Pool".to_owned(),
-                    ),
-                };
             let tags = vec![
                 "ociswap".to_owned(),
                 "liquidity-pool".to_owned(),
@@ -2124,6 +2152,7 @@ struct InstantiateEvent {
     price_sqrt: PreciseDecimal,
     tick_spacing: u32,
     input_fee_rate: Decimal,
+    flash_loan_address: ResourceAddress,
     flash_loan_fee_rate: Decimal,
     registry_address: ComponentAddress,
     hooks: Vec<ComponentAddress>,
