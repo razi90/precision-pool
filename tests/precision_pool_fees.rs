@@ -1369,18 +1369,10 @@ mod precision_pool_fees {
             .execute_expect_success(false);
         helper.swap(helper.input_address(swap_type), dec!(1));
         helper.claim_fees_success(nft_ids!(1), x_fee_expected, y_fee_expected);
-        helper.total_fees_success(
-            NonFungibleLocalId::Integer((1).into()),
-            x_fee_expected,
-            y_fee_expected,
-        );
+        helper.total_fees_success(nft_ids!(1), x_fee_expected, y_fee_expected);
         helper.swap(helper.input_address(swap_type), dec!(1));
         helper.claim_fees_success(nft_ids!(1), x_fee_expected, y_fee_expected);
-        helper.total_fees_success(
-            NonFungibleLocalId::Integer((1).into()),
-            x_total_fee_expected,
-            y_total_fee_expected,
-        );
+        helper.total_fees_success(nft_ids!(1), x_total_fee_expected, y_total_fee_expected);
         helper.claim_fees_success(nft_ids!(1), dec!(0), dec!(0));
     }
 
@@ -1456,11 +1448,7 @@ mod precision_pool_fees {
             swap_remainder_expected,
         );
         helper.claim_fees_success(nft_ids!(1), x_fee_expected, y_fee_expected);
-        helper.total_fees_success(
-            NonFungibleLocalId::Integer((1).into()),
-            x_fee_expected,
-            y_fee_expected,
-        );
+        helper.total_fees_success(nft_ids!(1), x_fee_expected, y_fee_expected);
         helper.swap_success(
             swap_type,
             swap_second_input,
@@ -1468,11 +1456,7 @@ mod precision_pool_fees {
             swap_second_remainder_expected,
         );
         helper.claim_fees_success(nft_ids!(1), x_fee_expected, y_fee_expected);
-        helper.total_fees_success(
-            NonFungibleLocalId::Integer((1).into()),
-            x_total_fee_expected,
-            y_total_fee_expected,
-        );
+        helper.total_fees_success(nft_ids!(1), x_total_fee_expected, y_total_fee_expected);
         helper.claim_fees_success(nft_ids!(1), dec!(0), dec!(0));
         helper.remove_liquidity_success(nft_ids!(1), x_remove_expected, y_remove_expected)
     }
@@ -1764,5 +1748,103 @@ mod precision_pool_fees {
                     .execute_expect_success(false);
             }
         }
+    }
+
+    // CLAIMABLE_FEES
+
+    fn add_swap_claimable_claim_swap_claimable_claim_success(
+        fee_rate_input: Decimal,
+        swap_type: SwapType,
+        x_fee_expected: Decimal,
+        y_fee_expected: Decimal,
+        x_second_fee_expected: Decimal,
+        y_second_fee_expected: Decimal,
+    ) {
+        let mut helper = PoolTestHelper::new();
+        helper.instantiate_default_with_input_fee(
+            *PRICE_BETWEEN_MIDDLE_BOUNDS_SQRT,
+            fee_rate_input,
+            false,
+        );
+        helper
+            .add_liquidity_default_batch(&ONE_LP)
+            .registry
+            .execute_expect_success(false);
+        helper.swap(helper.input_address(swap_type), dec!(1));
+        helper.claimable_fees_success(nft_ids!(1), x_fee_expected, y_fee_expected);
+        helper.claim_fees_success(nft_ids!(1), x_fee_expected, y_fee_expected);
+        helper.swap(helper.input_address(swap_type), dec!(1));
+        helper.claimable_fees_success(nft_ids!(1), x_second_fee_expected, y_second_fee_expected);
+        helper.claim_fees_success(nft_ids!(1), x_second_fee_expected, y_second_fee_expected);
+    }
+
+    #[test]
+    fn test_claimable_fees() {
+        add_swap_claimable_claim_swap_claimable_claim_success(
+            dec!(0.1),
+            SwapType::SellX,
+            dec!(0.089999999999999999),
+            dec!(0),
+            dec!(0.089999999999999999),
+            dec!(0),
+        );
+        add_swap_claimable_claim_swap_claimable_claim_success(
+            dec!(0.1),
+            SwapType::BuyX,
+            dec!(0),
+            dec!(0.089999999999999999),
+            dec!(0),
+            dec!(0.089999999999999999),
+        );
+    }
+
+    fn add_swap_claimable_claim_multiple_success(
+        fee_rate_input: Decimal,
+        swap_type: SwapType,
+        x_first_fee_expected: Decimal,
+        y_first_fee_expected: Decimal,
+        x_second_fee_expected: Decimal,
+        y_second_fee_expected: Decimal,
+    ) {
+        let mut helper = PoolTestHelper::new();
+        helper.instantiate_default_with_input_fee(
+            *PRICE_BETWEEN_MIDDLE_BOUNDS_SQRT,
+            fee_rate_input,
+            false,
+        );
+        helper
+            .add_liquidity_default_batch(&TWO_LP_OVERLAPPING_INSIDE)
+            .registry
+            .execute_expect_success(false);
+        helper.swap(helper.input_address(swap_type), dec!(10));
+
+        let (x_fee_expected, y_fee_expected) = (
+            x_first_fee_expected + x_second_fee_expected,
+            y_first_fee_expected + y_second_fee_expected,
+        );
+        helper.claimable_fees_success(nft_ids!(1), x_first_fee_expected, y_first_fee_expected);
+        helper.claimable_fees_success(nft_ids!(2), x_second_fee_expected, y_second_fee_expected);
+        helper.claimable_fees_success(nft_ids!(1, 2), x_fee_expected, y_fee_expected);
+        helper.claim_fees_success(nft_ids!(1, 2), x_fee_expected, y_fee_expected);
+    }
+
+    #[test]
+    fn test_claimable_fees_multiple() {
+        add_swap_claimable_claim_multiple_success(
+            dec!(0.1),
+            SwapType::SellX,
+            dec!(0.349297801821240794),
+            dec!(0),
+            dec!(0.550702198178759205),
+            dec!(0),
+        );
+        add_swap_claimable_claim_multiple_success(
+            dec!(0.1),
+            SwapType::BuyX,
+            dec!(0),
+            dec!(0.124946456941939466),
+            dec!(0),
+            dec!(0.775053543058060533),
+        );
     }
 }

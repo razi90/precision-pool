@@ -4,7 +4,7 @@ CALL_METHOD
     Decimal("5000")
 ;
 CALL_FUNCTION
-    Address("package_sim1p5tk86x78nq08k9q8hy9n7w99fv5zefkekeujkyerkrtydzunvrpzu")
+    Address("package_sim1p5eg9cg06z3qesfp3jmq3lsq3fdmk4pgcg46s4k7raxdtw8ql4fg9a")
     "PrecisionPool"
     "instantiate"
     Address("resource_sim1t4wl7uzm5fesrgqucv90tmclh06waq078gve904csqxuv3lf5ke9yl")

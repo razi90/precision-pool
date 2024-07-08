@@ -445,16 +445,39 @@ impl PoolTestHelper {
         self
     }
 
-    pub fn total_fees(&mut self, lp_position_id: NonFungibleLocalId) -> &mut PoolTestHelper {
+    pub fn claimable_fees(
+        &mut self,
+        lp_position_ids: IndexSet<NonFungibleLocalId>,
+    ) -> &mut PoolTestHelper {
         let pool_address = self.pool_address.unwrap();
         let manifest_builder = mem::replace(
             &mut self.registry.env.manifest_builder,
             ManifestBuilder::new(),
         );
+        let lp_position_ids: Vec<NonFungibleLocalId> = lp_position_ids.into_iter().collect();
+        self.registry.env.manifest_builder = manifest_builder.call_method(
+            pool_address,
+            "claimable_fees",
+            manifest_args!(lp_position_ids),
+        );
+        self.registry.env.new_instruction("claimable_fees", 1, 0);
+        self
+    }
+
+    pub fn total_fees(
+        &mut self,
+        lp_position_ids: IndexSet<NonFungibleLocalId>,
+    ) -> &mut PoolTestHelper {
+        let pool_address = self.pool_address.unwrap();
+        let manifest_builder = mem::replace(
+            &mut self.registry.env.manifest_builder,
+            ManifestBuilder::new(),
+        );
+        let lp_position_ids: Vec<NonFungibleLocalId> = lp_position_ids.into_iter().collect();
         self.registry.env.manifest_builder = manifest_builder.call_method(
             pool_address,
             "total_fees",
-            manifest_args!(lp_position_id),
+            manifest_args!(lp_position_ids),
         );
         self.registry.env.new_instruction("total_fees", 1, 0);
         self
@@ -1071,14 +1094,35 @@ impl PoolTestHelper {
         );
     }
 
-    pub fn total_fees_success(
+    pub fn claimable_fees_success(
         &mut self,
-        lp_position_id: NonFungibleLocalId,
+        lp_positions: IndexSet<NonFungibleLocalId>,
         x_fee_expected: Decimal,
         y_fee_expected: Decimal,
     ) {
         let receipt = self
-            .total_fees(lp_position_id)
+            .claimable_fees(lp_positions)
+            .registry
+            .execute_expect_success(false);
+        let output_amounts: Vec<(Decimal, Decimal)> = receipt.outputs("claimable_fees");
+
+        assert_eq!(
+            output_amounts,
+            vec![(x_fee_expected, y_fee_expected)],
+            "\nX Amount = {:?}, Y Amount {:?}",
+            x_fee_expected,
+            y_fee_expected
+        );
+    }
+
+    pub fn total_fees_success(
+        &mut self,
+        lp_position_ids: IndexSet<NonFungibleLocalId>,
+        x_fee_expected: Decimal,
+        y_fee_expected: Decimal,
+    ) {
+        let receipt = self
+            .total_fees(lp_position_ids)
             .registry
             .execute_expect_success(false);
         let output_amounts: Vec<(Decimal, Decimal)> = receipt.outputs("total_fees");
