@@ -371,6 +371,27 @@ impl PoolTestHelper {
         self
     }
 
+    pub fn removable_liquidity(
+        &mut self,
+        lp_position_ids: IndexSet<NonFungibleLocalId>,
+    ) -> &mut PoolTestHelper {
+        let pool_address = self.pool_address.unwrap();
+        let manifest_builder = mem::replace(
+            &mut self.registry.env.manifest_builder,
+            ManifestBuilder::new(),
+        );
+        let lp_position_ids: Vec<NonFungibleLocalId> = lp_position_ids.into_iter().collect();
+        self.registry.env.manifest_builder = manifest_builder.call_method(
+            pool_address,
+            "removable_liquidity",
+            manifest_args!(lp_position_ids),
+        );
+        self.registry
+            .env
+            .new_instruction("removable_liquidity", 1, 0);
+        self
+    }
+
     pub fn swap(
         &mut self,
         input_address: ResourceAddress,
@@ -999,6 +1020,27 @@ impl PoolTestHelper {
                 Amount(self.x_address(), x_output_expected),
                 Amount(self.y_address(), y_output_expected)
             ]],
+            "\nX Amount = {:?}, Y Amount {:?}",
+            x_output_expected,
+            y_output_expected
+        );
+    }
+
+    pub fn removable_liquidity_success(
+        &mut self,
+        lp_positions: IndexSet<NonFungibleLocalId>,
+        x_output_expected: Decimal,
+        y_output_expected: Decimal,
+    ) {
+        let receipt = self
+            .removable_liquidity(lp_positions)
+            .registry
+            .execute_expect_success(true);
+        let output_amounts: Vec<(Decimal, Decimal)> = receipt.outputs("removable_liquidity");
+
+        assert_eq!(
+            output_amounts,
+            vec![(x_output_expected, y_output_expected)],
             "\nX Amount = {:?}, Y Amount {:?}",
             x_output_expected,
             y_output_expected

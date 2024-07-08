@@ -28,6 +28,7 @@ mod precision_pool {
             add_liquidity               => PUBLIC;
             add_liquidity_shape         => PUBLIC;
             remove_liquidity            => PUBLIC;
+            removable_liquidity         => PUBLIC;
             tick_spacing                => PUBLIC;
             x_address                   => PUBLIC;
             y_address                   => PUBLIC;
@@ -796,6 +797,53 @@ mod precision_pool {
                 ))
                 .next()
                 .map(|(key, _, _)| key);
+        }
+
+        /// Calculates the removable amounts of token X and token Y from the pool without removing liquidity.
+        ///
+        /// This method is called to determine the amounts of token X and token Y that can be withdrawn from the pool
+        /// based on the current pool state and the specifics of the liquidity position represented by the NFTs in `lp_position_ids`.
+        ///
+        /// Note: If remove liquidity hooks are utilized, they are not accounted for in this calculation and may alter the final output.
+        ///
+        /// # Arguments
+        /// * `lp_position_ids`: A vector containing the IDs of liquidity position NFTs which represent the liquidity
+        ///   positions to be evaluated.
+        ///
+        /// # Returns
+        /// A tuple consisting of:
+        /// * The amount of token X that can be removed from the pool
+        /// * The amount of token Y that can be removed from the pool
+        pub fn removable_liquidity(
+            &self,
+            lp_position_ids: Vec<NonFungibleLocalId>,
+        ) -> (Decimal, Decimal) {
+            let mut x_total_output = dec!(0);
+            let mut y_total_output = dec!(0);
+
+            for position_id in lp_position_ids {
+                let position: LiquidityPosition =
+                    self.lp_manager.get_non_fungible_data(&position_id);
+                let price_left_sqrt = tick_to_price_sqrt(position.left_bound);
+                let price_right_sqrt = tick_to_price_sqrt(position.right_bound);
+
+                let (x_fees, y_fees, _, _) = self.claimable_fees_internal(&position);
+                let (x_amount, y_amount) = remove_amounts(
+                    position.liquidity,
+                    self.price_sqrt,
+                    price_left_sqrt,
+                    price_right_sqrt,
+                    self.x_divisibility(),
+                    self.y_divisibility(),
+                );
+
+                x_total_output += x_fees;
+                y_total_output += y_fees;
+                x_total_output += x_amount;
+                y_total_output += y_amount;
+            }
+
+            (x_total_output, y_total_output)
         }
 
         /// Removes liquidity from the pool and returns the corresponding amounts of token X and token Y.
