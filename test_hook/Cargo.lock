@@ -681,8 +681,8 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
 name = "oracle"
-version = "1.1.1"
-source = "git+ssh://git@github.com/ociswap/oracle.git?tag=v1.1.1#a31e0b22cd7adefb2dc265ec5a81529402fe8f81"
+version = "1.2.0"
+source = "git+ssh://git@github.com/ociswap/oracle.git?tag=v1.2.0#83c87177e47abbe8f750a2aeab402c1584006263"
 dependencies = [
  "common",
  "sbor",
@@ -751,7 +751,7 @@ checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 
 [[package]]
 name = "precision_pool"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "common",
  "oracle",

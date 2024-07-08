@@ -33,6 +33,7 @@ mod precision_pool {
             y_address                   => PUBLIC;
             x_divisibility              => PUBLIC;
             y_divisibility              => PUBLIC;
+            vault_amounts               => PUBLIC;
             lp_address                  => PUBLIC;
             price_sqrt                  => PUBLIC;
             active_tick                 => PUBLIC;
@@ -1553,6 +1554,17 @@ mod precision_pool {
                 .resource_type()
                 .divisibility()
                 .unwrap()
+        }
+
+        /// Retrieve the amounts of the X and Y tokens in this pool.
+        ///
+        /// # Returns
+        /// * `IndexMap<ResourceAddress, Decimal>` - A map containing the resource addresses and their corresponding amounts.
+        pub fn vault_amounts(&self) -> IndexMap<ResourceAddress, Decimal> {
+            IndexMap::from([
+                (self.x_vault.resource_address(), self.x_vault.amount()),
+                (self.y_vault.resource_address(), self.y_vault.amount()),
+            ])
         }
 
         /// Retrieves the current active tick for the pool.
