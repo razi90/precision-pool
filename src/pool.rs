@@ -475,7 +475,7 @@ mod precision_pool {
             let price_right_sqrt = tick_to_price_sqrt(right_bound);
 
             // Determine the maximum amounts of X and Y tokens that can be added as liquidity at the current price.
-            let (liquidity, x_amount, y_amount) = allowed_amounts(
+            let (liquidity, x_amount, y_amount) = addable_amounts(
                 x_bucket.amount(),
                 self.x_divisibility(),
                 y_bucket.amount(),
