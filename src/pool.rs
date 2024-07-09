@@ -806,6 +806,7 @@ mod precision_pool {
         /// based on the current pool state and the specifics of the liquidity position represented by the NFTs in `lp_position_ids`.
         ///
         /// Note: If remove liquidity hooks are utilized, they are not accounted for in this calculation and may alter the final output.
+        /// The minimum removable fraction indicates the minimum fraction of liquidity that can be withdrawn.
         ///
         /// # Arguments
         /// * `lp_position_ids`: A vector containing the IDs of liquidity position NFTs which represent the liquidity
