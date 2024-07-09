@@ -845,12 +845,11 @@ mod precision_pool {
                 y_total_output += y_amount;
             }
 
-            let minimum_removable_fraction = if self.hook_calls.after_remove_liquidity.1.is_empty()
-            {
-                dec!(1)
-            } else {
-                HOOKS_MIN_REMAINING_BUCKET_FRACTION
-            };
+            let minimum_removable_fraction =
+                match self.hook_calls.after_remove_liquidity.1.is_empty() {
+                    true => dec!(1),
+                    false => HOOKS_MIN_REMAINING_BUCKET_FRACTION,
+                };
 
             (x_total_output, y_total_output, minimum_removable_fraction)
         }
