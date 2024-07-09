@@ -28,6 +28,7 @@ mod precision_pool {
             add_liquidity               => PUBLIC;
             add_liquidity_shape         => PUBLIC;
             remove_liquidity            => PUBLIC;
+            removable_liquidity         => PUBLIC;
             tick_spacing                => PUBLIC;
             x_address                   => PUBLIC;
             y_address                   => PUBLIC;
@@ -46,6 +47,7 @@ mod precision_pool {
             flash_loan_address          => PUBLIC;
             hook                        => PUBLIC;
             claim_fees                  => PUBLIC;
+            claimable_fees              => PUBLIC;
             seconds_in_position         => PUBLIC;
             total_fees                  => PUBLIC;
             registry                    => PUBLIC;
@@ -473,7 +475,7 @@ mod precision_pool {
             let price_right_sqrt = tick_to_price_sqrt(right_bound);
 
             // Determine the maximum amounts of X and Y tokens that can be added as liquidity at the current price.
-            let (liquidity, x_amount, y_amount) = allowed_amounts(
+            let (liquidity, x_amount, y_amount) = addable_amounts(
                 x_bucket.amount(),
                 self.x_divisibility(),
                 y_bucket.amount(),
@@ -798,6 +800,61 @@ mod precision_pool {
                 .map(|(key, _, _)| key);
         }
 
+        /// Calculates the removable amounts of token X and token Y from the pool without removing liquidity.
+        ///
+        /// This method is called to determine the amounts of token X and token Y that can be withdrawn from the pool
+        /// based on the current pool state and the specifics of the liquidity position represented by the NFTs in `lp_position_ids`.
+        ///
+        /// Note: If remove liquidity hooks are utilized, they are not accounted for in this calculation and may alter the final output.
+        /// The minimum removable fraction indicates the minimum fraction of liquidity that can be withdrawn.
+        ///
+        /// # Arguments
+        /// * `lp_position_ids`: A vector containing the IDs of liquidity position NFTs which represent the liquidity
+        ///   positions to be evaluated.
+        ///
+        /// # Returns
+        /// A tuple consisting of:
+        /// * The amount of token X that can be removed from the pool.
+        /// * The amount of token Y that can be removed from the pool.
+        /// * The minimum removable fraction of the liquidity after hooks are executed.
+        pub fn removable_liquidity(
+            &self,
+            lp_position_ids: Vec<NonFungibleLocalId>,
+        ) -> (Decimal, Decimal, Decimal) {
+            let mut x_total_output = dec!(0);
+            let mut y_total_output = dec!(0);
+
+            for position_id in lp_position_ids {
+                let position: LiquidityPosition =
+                    self.lp_manager.get_non_fungible_data(&position_id);
+                let price_left_sqrt = tick_to_price_sqrt(position.left_bound);
+                let price_right_sqrt = tick_to_price_sqrt(position.right_bound);
+
+                let (x_fees, y_fees, _, _) = self.claimable_fees_internal(&position);
+                let (x_amount, y_amount) = removable_amounts(
+                    position.liquidity,
+                    self.price_sqrt,
+                    price_left_sqrt,
+                    price_right_sqrt,
+                    self.x_divisibility(),
+                    self.y_divisibility(),
+                );
+
+                x_total_output += x_fees;
+                y_total_output += y_fees;
+                x_total_output += x_amount;
+                y_total_output += y_amount;
+            }
+
+            let minimum_removable_fraction =
+                match self.hook_calls.after_remove_liquidity.1.is_empty() {
+                    true => dec!(1),
+                    false => HOOKS_MIN_REMAINING_BUCKET_FRACTION,
+                };
+
+            (x_total_output, y_total_output, minimum_removable_fraction)
+        }
+
         /// Removes liquidity from the pool and returns the corresponding amounts of token X and token Y.
         ///
         /// This method is called when a liquidity provider wants to withdraw their liquidity from the pool.
@@ -841,7 +898,7 @@ mod precision_pool {
                 // Auto-claim fees before removing liquidity position
                 let (x_fees, y_fees) = self.claim_fees_internal(&nft);
                 // Calculate the token amounts to be removed based on the liquidity position data.
-                let (x_amount, y_amount) = remove_amounts(
+                let (x_amount, y_amount) = removable_amounts(
                     position.liquidity,
                     self.price_sqrt,
                     price_left_sqrt,
@@ -1174,28 +1231,26 @@ mod precision_pool {
             self.fee_protocol_share = fee_protocol_share.clamp(dec!(0), FEE_PROTOCOL_SHARE_MAX);
         }
 
-        /// Claims the accumulated fees for a given liquidity position.
+        /// Returns the claimable fees for a given liquidity position.
         ///
-        /// This method calculates and distributes the fees accrued in a specific liquidity position represented by an NFT.
+        /// This method calculates the fees accrued in a specific liquidity position represented by an NFT.
         /// It updates the fee checkpoints for both x and y tokens based on the current state of the pool and the position's bounds.
-        /// The method ensures that the fee distribution is accurate by considering the fees outside the position's range and the current active tick.
+        /// The method ensures that the fee calculation is accurate by considering the fees outside the position's range and the current active tick.
         ///
         /// # Arguments
-        /// * `position_nft` - A reference to the non-fungible token representing the liquidity position.
+        /// * `position` - A reference to the `LiquidityPosition` representing the liquidity position.
         ///
         /// # Returns
-        /// A tuple containing two `Bucket`s:
-        /// * The first `Bucket` contains the x token fees claimed.
-        /// * The second `Bucket` contains the y token fees claimed.
+        /// A tuple containing two `Decimal`s:
+        /// * The first `Decimal` contains the x token fees claimable.
+        /// * The second `Decimal` contains the y token fees claimable.
         ///
         /// # Panics
         /// Panics if the ticks corresponding to the position's bounds are not found in the pool's tick map.
-        fn claim_fees_internal(
-            &mut self,
-            position_nft: &NonFungible<LiquidityPosition>,
-        ) -> (Bucket, Bucket) {
-            let position_id: &NonFungibleLocalId = position_nft.local_id();
-            let position: LiquidityPosition = position_nft.data();
+        fn claimable_fees_internal(
+            &self,
+            position: &LiquidityPosition,
+        ) -> (Decimal, Decimal, PreciseDecimal, PreciseDecimal) {
             let left_tick = self.ticks.get(&position.left_bound).unwrap();
             let right_tick = self.ticks.get(&position.right_bound).unwrap();
 
@@ -1223,6 +1278,69 @@ mod precision_pool {
             let y_amount = ((new_y_fee_checkpoint - position.y_fee_checkpoint)
                 * position.liquidity)
                 .floor_to(self.y_divisibility());
+
+            (
+                x_amount,
+                y_amount,
+                new_x_fee_checkpoint,
+                new_y_fee_checkpoint,
+            )
+        }
+
+        /// Returns the claimable fees for all positions identified by the provided non-fungible local IDs.
+        ///
+        /// This method calculates all fees (both `x` and `y` tokens) that have accrued to the liquidity positions
+        /// specified by the non-fungible local IDs (`lp_position_ids`). It iterates over each position, calculates the fees,
+        /// and aggregates them into totals for `x` and `y` fees respectively.
+        ///
+        /// # Arguments
+        /// * `lp_position_ids` - A vector of `NonFungibleLocalId` containing the IDs of liquidity positions for which fees are to be calculated.
+        ///
+        /// # Returns
+        /// A tuple containing two `Decimal`s:
+        /// - The first `Decimal` represents the total claimable `x` fees.
+        /// - The second `Decimal` represents the total claimable `y` fees.
+        pub fn claimable_fees(
+            &self,
+            lp_position_ids: Vec<NonFungibleLocalId>,
+        ) -> (Decimal, Decimal) {
+            let mut x_fees = dec!(0);
+            let mut y_fees = dec!(0);
+            for position_id in lp_position_ids {
+                let position: LiquidityPosition =
+                    self.lp_manager.get_non_fungible_data(&position_id);
+                let (x_claimable, y_claimable, _, _) = self.claimable_fees_internal(&position);
+                x_fees += x_claimable;
+                y_fees += y_claimable;
+            }
+            (x_fees, y_fees)
+        }
+
+        /// Claims the accumulated fees for a given liquidity position.
+        ///
+        /// This method calculates and distributes the fees accrued in a specific liquidity position represented by an NFT.
+        /// It updates the fee checkpoints for both x and y tokens based on the current state of the pool and the position's bounds.
+        /// The method ensures that the fee distribution is accurate by considering the fees outside the position's range and the current active tick.
+        ///
+        /// # Arguments
+        /// * `position_nft` - A reference to the non-fungible token representing the liquidity position.
+        ///
+        /// # Returns
+        /// A tuple containing two `Bucket`s:
+        /// * The first `Bucket` contains the x token fees claimed.
+        /// * The second `Bucket` contains the y token fees claimed.
+        ///
+        /// # Panics
+        /// Panics if the ticks corresponding to the position's bounds are not found in the pool's tick map.
+        fn claim_fees_internal(
+            &mut self,
+            position_nft: &NonFungible<LiquidityPosition>,
+        ) -> (Bucket, Bucket) {
+            let position_id: &NonFungibleLocalId = position_nft.local_id();
+            let position: LiquidityPosition = position_nft.data();
+
+            let (x_amount, y_amount, new_x_fee_checkpoint, new_y_fee_checkpoint) =
+                self.claimable_fees_internal(&position);
 
             self.lp_manager.update_non_fungible_data(
                 position_id,
@@ -1312,13 +1430,11 @@ mod precision_pool {
         /// scaled by the liquidity of the position.
         ///
         /// # Arguments
-        /// * `position_id` - The identifier of the non-fungible token representing the liquidity position.
+        /// * `position` - A reference to the `LiquidityPosition` struct representing the liquidity position.
         ///
         /// # Returns
         /// * `(Decimal, Decimal)` - A tuple containing the accrued `x` and `y` fees.
-        pub fn total_fees(&self, position_id: NonFungibleLocalId) -> (Decimal, Decimal) {
-            let position: LiquidityPosition = self.lp_manager.get_non_fungible_data(&position_id);
-
+        fn total_fees_internal(&self, position: &LiquidityPosition) -> (Decimal, Decimal) {
             let left_tick = self.ticks.get(&position.left_bound).unwrap();
             let right_tick = self.ticks.get(&position.right_bound).unwrap();
 
@@ -1351,6 +1467,32 @@ mod precision_pool {
                 .floor_to(self.y_divisibility());
 
             (x_amount, y_amount)
+        }
+
+        /// Returns the total fees for all positions identified by the provided non-fungible local IDs.
+        ///
+        /// This method calculates the total fees (both `x` and `y` tokens) that have accrued to the liquidity positions
+        /// specified by the non-fungible local IDs (`lp_position_ids`). It iterates over each position, calculates the fees,
+        /// and aggregates them into totals for `x` and `y` fees respectively.
+        ///
+        /// # Arguments
+        /// * `lp_position_ids` - A vector of `NonFungibleLocalId` containing the IDs of liquidity positions for which fees are to be calculated.
+        ///
+        /// # Returns
+        /// A tuple containing two `Decimal`s:
+        /// - The first `Decimal` represents the total `x` fees.
+        /// - The second `Decimal` represents the total `y` fees.
+        pub fn total_fees(&self, lp_position_ids: Vec<NonFungibleLocalId>) -> (Decimal, Decimal) {
+            let mut x_fees = dec!(0);
+            let mut y_fees = dec!(0);
+            for position_id in lp_position_ids {
+                let position: LiquidityPosition =
+                    self.lp_manager.get_non_fungible_data(&position_id);
+                let (x_total, y_total) = self.total_fees_internal(&position);
+                x_fees += x_total;
+                y_fees += y_total;
+            }
+            (x_fees, y_fees)
         }
 
         /// Executes a swap, handling deposits and withdrawals based on the swap type.

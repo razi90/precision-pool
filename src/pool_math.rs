@@ -89,7 +89,7 @@ pub fn align_tick(tick: i32, spacing: u32) -> i32 {
 /// - `liquidity`: The maximum liquidity that can be added given the token amounts and price bounds.
 /// - `x_amount_allowed`: The adjusted amount of token `x` that can be added.
 /// - `y_amount_allowed`: The adjusted amount of token `y` that can be added.
-pub fn allowed_amounts(
+pub fn addable_amounts(
     x_amount: Decimal,
     x_divisibility: u8,
     y_amount: Decimal,
@@ -254,7 +254,7 @@ fn adjust_within_margin(amount: Decimal, allowed_amount: Decimal, margin: Decima
 ///
 /// A tuple containing the withdrawable amounts of token `x` and token `y`.
 ///
-pub fn remove_amounts(
+pub fn removable_amounts(
     liquidity: PreciseDecimal,
     price_sqrt: PreciseDecimal,
     price_left_bound_sqrt: PreciseDecimal,

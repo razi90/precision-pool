@@ -14,3 +14,5 @@ precision_pool = { path = ".." }
 registry_test_helper = { path = "../registry/test_helper" }
 pretty_assertions = "1.3.0"
 lazy_static = "1.4.0"
+test_hook = { path = "../test_hook" }
+precision_pool_hooks = { path = "../hooks" }

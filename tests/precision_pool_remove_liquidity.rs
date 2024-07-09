@@ -2387,4 +2387,123 @@ mod precision_pool_remove_liquidity {
             dec!("8.068161142158645482"),
         );
     }
+
+    // REMOVABLE_LIQUIDITY
+
+    fn add_swap_removable_remove_success(
+        fee_rate_input: Decimal,
+        swap_type: SwapType,
+        x_amount_expected: Decimal,
+        y_amount_expected: Decimal,
+    ) {
+        let mut helper = PoolTestHelper::new();
+        helper.instantiate_default_with_input_fee(
+            *PRICE_BETWEEN_MIDDLE_BOUNDS_SQRT,
+            fee_rate_input,
+            false,
+        );
+        helper
+            .add_liquidity_default_batch(&ONE_LP)
+            .registry
+            .execute_expect_success(false);
+        helper.swap(helper.input_address(swap_type), dec!(1));
+        helper.removable_liquidity_success(
+            nft_ids!(1),
+            x_amount_expected,
+            y_amount_expected,
+            dec!(1),
+        );
+        helper.remove_liquidity_success(nft_ids!(1), x_amount_expected, y_amount_expected);
+    }
+
+    #[test]
+    fn test_removable_liquidity() {
+        add_swap_removable_remove_success(
+            dec!(0.1),
+            SwapType::SellX,
+            dec!(3.896176684560680876),
+            dec!(8.367790071541472245),
+        );
+        add_swap_removable_remove_success(
+            dec!(0.1),
+            SwapType::BuyX,
+            dec!(2.478175785363810807),
+            dec!(10.989999999999999995),
+        );
+    }
+
+    fn add_swap_removable_remove_multiple_success(
+        fee_rate_input: Decimal,
+        swap_type: SwapType,
+        x_first_amount_expected: Decimal,
+        y_first_amount_expected: Decimal,
+        x_second_amount_expected: Decimal,
+        y_second_amount_expected: Decimal,
+    ) {
+        let mut helper = PoolTestHelper::new();
+        helper.instantiate_default_with_input_fee(
+            *PRICE_BETWEEN_MIDDLE_BOUNDS_SQRT,
+            fee_rate_input,
+            false,
+        );
+        helper
+            .add_liquidity_default_batch(&TWO_LP_OVERLAPPING_INSIDE)
+            .registry
+            .execute_expect_success(false);
+        helper.swap(helper.input_address(swap_type), dec!(10));
+
+        let (x_amount_expected, y_amount_expected) = (
+            x_first_amount_expected + x_second_amount_expected,
+            y_first_amount_expected + y_second_amount_expected,
+        );
+        helper.removable_liquidity_success(
+            nft_ids!(1),
+            x_first_amount_expected,
+            y_first_amount_expected,
+            dec!(1),
+        );
+        helper.removable_liquidity_success(
+            nft_ids!(2),
+            x_second_amount_expected,
+            y_second_amount_expected,
+            dec!(1),
+        );
+        helper.removable_liquidity_success(
+            nft_ids!(1, 2),
+            x_amount_expected,
+            y_amount_expected,
+            dec!(1),
+        );
+        helper.remove_liquidity_success(nft_ids!(1, 2), x_amount_expected, y_amount_expected);
+    }
+
+    #[test]
+    fn test_removable_remove_multiple() {
+        add_swap_removable_remove_multiple_success(
+            dec!(0.1),
+            SwapType::SellX,
+            dec!(6.748452504594329615),
+            dec!(5.006368481716003411),
+            dec!(13.781051309159918219),
+            dec!(0),
+        );
+        add_swap_removable_remove_multiple_success(
+            dec!(0.1),
+            SwapType::BuyX,
+            dec!(2.323054722457962828),
+            dec!(11.374411026361334132),
+            dec!(4.106171798629102106),
+            dec!(18.525588973638665861),
+        );
+    }
+
+    #[test]
+    fn test_removable_liquidity_minimum_removable_fraction() {
+        removable_liquidity_with_remove_hook(
+            nft_ids!(1),
+            dec!(9.999999999999999997),
+            dec!(7.457210849065006033),
+            dec!(0.9),
+        )
+    }
 }

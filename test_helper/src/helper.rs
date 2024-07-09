@@ -10,8 +10,10 @@ use registry_test_helper::RegistryTestHelper;
 use scrypto::prelude::*;
 use std::mem;
 
+use precision_pool_hooks::HookCall;
 use radix_transactions::builder::ManifestBuilder;
 use scrypto_testenv::*;
+use test_hook::test_hook::TestAccess;
 
 static ONE_LP: [LiquidityPosition; 1] = [LiquidityPosition {
     left_bound: TICK_LEFT_BOUND,
@@ -371,6 +373,27 @@ impl PoolTestHelper {
         self
     }
 
+    pub fn removable_liquidity(
+        &mut self,
+        lp_position_ids: IndexSet<NonFungibleLocalId>,
+    ) -> &mut PoolTestHelper {
+        let pool_address = self.pool_address.unwrap();
+        let manifest_builder = mem::replace(
+            &mut self.registry.env.manifest_builder,
+            ManifestBuilder::new(),
+        );
+        let lp_position_ids: Vec<NonFungibleLocalId> = lp_position_ids.into_iter().collect();
+        self.registry.env.manifest_builder = manifest_builder.call_method(
+            pool_address,
+            "removable_liquidity",
+            manifest_args!(lp_position_ids),
+        );
+        self.registry
+            .env
+            .new_instruction("removable_liquidity", 1, 0);
+        self
+    }
+
     pub fn swap(
         &mut self,
         input_address: ResourceAddress,
@@ -424,16 +447,39 @@ impl PoolTestHelper {
         self
     }
 
-    pub fn total_fees(&mut self, lp_position_id: NonFungibleLocalId) -> &mut PoolTestHelper {
+    pub fn claimable_fees(
+        &mut self,
+        lp_position_ids: IndexSet<NonFungibleLocalId>,
+    ) -> &mut PoolTestHelper {
         let pool_address = self.pool_address.unwrap();
         let manifest_builder = mem::replace(
             &mut self.registry.env.manifest_builder,
             ManifestBuilder::new(),
         );
+        let lp_position_ids: Vec<NonFungibleLocalId> = lp_position_ids.into_iter().collect();
+        self.registry.env.manifest_builder = manifest_builder.call_method(
+            pool_address,
+            "claimable_fees",
+            manifest_args!(lp_position_ids),
+        );
+        self.registry.env.new_instruction("claimable_fees", 1, 0);
+        self
+    }
+
+    pub fn total_fees(
+        &mut self,
+        lp_position_ids: IndexSet<NonFungibleLocalId>,
+    ) -> &mut PoolTestHelper {
+        let pool_address = self.pool_address.unwrap();
+        let manifest_builder = mem::replace(
+            &mut self.registry.env.manifest_builder,
+            ManifestBuilder::new(),
+        );
+        let lp_position_ids: Vec<NonFungibleLocalId> = lp_position_ids.into_iter().collect();
         self.registry.env.manifest_builder = manifest_builder.call_method(
             pool_address,
             "total_fees",
-            manifest_args!(lp_position_id),
+            manifest_args!(lp_position_ids),
         );
         self.registry.env.new_instruction("total_fees", 1, 0);
         self
@@ -1005,6 +1051,33 @@ impl PoolTestHelper {
         );
     }
 
+    pub fn removable_liquidity_success(
+        &mut self,
+        lp_positions: IndexSet<NonFungibleLocalId>,
+        x_output_expected: Decimal,
+        y_output_expected: Decimal,
+        minimum_removable_fraction: Decimal,
+    ) {
+        let receipt = self
+            .removable_liquidity(lp_positions)
+            .registry
+            .execute_expect_success(true);
+        let output_amounts: Vec<(Decimal, Decimal, Decimal)> =
+            receipt.outputs("removable_liquidity");
+
+        assert_eq!(
+            output_amounts,
+            vec![(
+                x_output_expected,
+                y_output_expected,
+                minimum_removable_fraction
+            )],
+            "\nX Amount = {:?}, Y Amount {:?}",
+            x_output_expected,
+            y_output_expected
+        );
+    }
+
     pub fn claim_fees_success(
         &mut self,
         lp_positions: IndexSet<NonFungibleLocalId>,
@@ -1029,14 +1102,35 @@ impl PoolTestHelper {
         );
     }
 
-    pub fn total_fees_success(
+    pub fn claimable_fees_success(
         &mut self,
-        lp_position_id: NonFungibleLocalId,
+        lp_positions: IndexSet<NonFungibleLocalId>,
         x_fee_expected: Decimal,
         y_fee_expected: Decimal,
     ) {
         let receipt = self
-            .total_fees(lp_position_id)
+            .claimable_fees(lp_positions)
+            .registry
+            .execute_expect_success(false);
+        let output_amounts: Vec<(Decimal, Decimal)> = receipt.outputs("claimable_fees");
+
+        assert_eq!(
+            output_amounts,
+            vec![(x_fee_expected, y_fee_expected)],
+            "\nX Amount = {:?}, Y Amount {:?}",
+            x_fee_expected,
+            y_fee_expected
+        );
+    }
+
+    pub fn total_fees_success(
+        &mut self,
+        lp_position_ids: IndexSet<NonFungibleLocalId>,
+        x_fee_expected: Decimal,
+        y_fee_expected: Decimal,
+    ) {
+        let receipt = self
+            .total_fees(lp_position_ids)
             .registry
             .execute_expect_success(false);
         let output_amounts: Vec<(Decimal, Decimal)> = receipt.outputs("total_fees");
@@ -1473,8 +1567,8 @@ pub fn remove_liquidity_default_scenario_sell(
 
 pub fn swap_with_hook_action_test(
     method_name: &str,
-    before_swap_amount: Option<Decimal>,
-    after_swap_amount: Option<Decimal>,
+    before_swap_fee_rate: Option<Decimal>,
+    after_swap_fee_rate: Option<Decimal>,
     expect_success: bool,
 ) {
     let packages: HashMap<&str, &str> = vec![
@@ -1528,7 +1622,7 @@ pub fn swap_with_hook_action_test(
     helper.registry.env.manifest_builder = manifest_builder.call_method(
         hook_address,
         method_name,
-        manifest_args!(before_swap_amount, after_swap_amount),
+        manifest_args!(before_swap_fee_rate, after_swap_fee_rate),
     );
     helper.registry.execute_expect_success(false);
 
@@ -1539,6 +1633,67 @@ pub fn swap_with_hook_action_test(
     } else {
         helper.registry.execute_expect_failure(false);
     }
+}
+
+pub fn removable_liquidity_with_remove_hook(
+    lp_positions: IndexSet<NonFungibleLocalId>,
+    x_output_expected: Decimal,
+    y_output_expected: Decimal,
+    minimum_removable_fraction_expected: Decimal,
+) {
+    let packages: HashMap<&str, &str> = vec![
+        ("registry", "registry"),
+        ("precision_pool", "."),
+        ("test_hook", "test_hook"),
+    ]
+    .into_iter()
+    .collect();
+    let mut helper = PoolTestHelper::new_with_packages(packages, true);
+
+    let package_address = helper.registry.env.package_address("test_hook");
+    let manifest_builder = mem::replace(
+        &mut helper.registry.env.manifest_builder,
+        ManifestBuilder::new(),
+    );
+    let calls = vec![HookCall::AfterRemoveLiquidity];
+    helper.registry.env.manifest_builder = manifest_builder.call_function(
+        package_address,
+        "TestHook",
+        "instantiate",
+        manifest_args!(
+            calls,
+            TestAccess::new(),
+            helper.x_address(),
+            helper.y_address()
+        ),
+    );
+    helper.registry.env.new_instruction("instantiate", 1, 0);
+
+    let receipt = helper.registry.execute_expect_success(false);
+
+    let new_resource_ads = receipt
+        .execution_receipt
+        .expect_commit_success()
+        .new_resource_addresses();
+
+    let outputs: Vec<(ComponentAddress, Bucket)> = receipt.outputs("instantiate");
+
+    let hook_address = outputs[0].0;
+    let hook_badge_address = new_resource_ads[0];
+
+    let hook_infos = vec![(hook_address, hook_badge_address)];
+
+    helper.instantiate_default_with_hooks(pdec!(1), hook_infos, false);
+    helper
+        .add_liquidity_default_batch(&ONE_LP)
+        .registry
+        .execute_expect_success(false);
+    helper.removable_liquidity_success(
+        lp_positions,
+        x_output_expected,
+        y_output_expected,
+        minimum_removable_fraction_expected,
+    );
 }
 
 /*
