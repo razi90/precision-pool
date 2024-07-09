@@ -829,7 +829,7 @@ mod precision_pool {
                 let price_right_sqrt = tick_to_price_sqrt(position.right_bound);
 
                 let (x_fees, y_fees, _, _) = self.claimable_fees_internal(&position);
-                let (x_amount, y_amount) = remove_amounts(
+                let (x_amount, y_amount) = removable_amounts(
                     position.liquidity,
                     self.price_sqrt,
                     price_left_sqrt,
@@ -890,7 +890,7 @@ mod precision_pool {
                 // Auto-claim fees before removing liquidity position
                 let (x_fees, y_fees) = self.claim_fees_internal(&nft);
                 // Calculate the token amounts to be removed based on the liquidity position data.
-                let (x_amount, y_amount) = remove_amounts(
+                let (x_amount, y_amount) = removable_amounts(
                     position.liquidity,
                     self.price_sqrt,
                     price_left_sqrt,

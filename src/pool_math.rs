@@ -254,7 +254,7 @@ fn adjust_within_margin(amount: Decimal, allowed_amount: Decimal, margin: Decima
 ///
 /// A tuple containing the withdrawable amounts of token `x` and token `y`.
 ///
-pub fn remove_amounts(
+pub fn removable_amounts(
     liquidity: PreciseDecimal,
     price_sqrt: PreciseDecimal,
     price_left_bound_sqrt: PreciseDecimal,
