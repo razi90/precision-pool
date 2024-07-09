@@ -813,12 +813,13 @@ mod precision_pool {
         ///
         /// # Returns
         /// A tuple consisting of:
-        /// * The amount of token X that can be removed from the pool
-        /// * The amount of token Y that can be removed from the pool
+        /// * The amount of token X that can be removed from the pool.
+        /// * The amount of token Y that can be removed from the pool.
+        /// * The minimum removable fraction of the liquidity after hooks are executed.
         pub fn removable_liquidity(
             &self,
             lp_position_ids: Vec<NonFungibleLocalId>,
-        ) -> (Decimal, Decimal) {
+        ) -> (Decimal, Decimal, Decimal) {
             let mut x_total_output = dec!(0);
             let mut y_total_output = dec!(0);
 
@@ -844,7 +845,14 @@ mod precision_pool {
                 y_total_output += y_amount;
             }
 
-            (x_total_output, y_total_output)
+            let minimum_removable_fraction = if self.hook_calls.after_remove_liquidity.1.is_empty()
+            {
+                dec!(1)
+            } else {
+                HOOKS_MIN_REMAINING_BUCKET_FRACTION
+            };
+
+            (x_total_output, y_total_output, minimum_removable_fraction)
         }
 
         /// Removes liquidity from the pool and returns the corresponding amounts of token X and token Y.

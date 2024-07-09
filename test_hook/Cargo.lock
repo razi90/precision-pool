@@ -777,6 +777,7 @@ dependencies = [
  "common",
  "lazy_static",
  "precision_pool",
+ "precision_pool_hooks",
  "pretty_assertions",
  "radix-engine",
  "radix-transactions",
@@ -784,6 +785,7 @@ dependencies = [
  "sbor",
  "scrypto",
  "scrypto_testenv",
+ "test_hook",
 ]
 
 [[package]]

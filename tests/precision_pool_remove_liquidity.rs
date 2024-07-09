@@ -2407,7 +2407,12 @@ mod precision_pool_remove_liquidity {
             .registry
             .execute_expect_success(false);
         helper.swap(helper.input_address(swap_type), dec!(1));
-        helper.removable_liquidity_success(nft_ids!(1), x_amount_expected, y_amount_expected);
+        helper.removable_liquidity_success(
+            nft_ids!(1),
+            x_amount_expected,
+            y_amount_expected,
+            dec!(1),
+        );
         helper.remove_liquidity_success(nft_ids!(1), x_amount_expected, y_amount_expected);
     }
 
@@ -2455,13 +2460,20 @@ mod precision_pool_remove_liquidity {
             nft_ids!(1),
             x_first_amount_expected,
             y_first_amount_expected,
+            dec!(1),
         );
         helper.removable_liquidity_success(
             nft_ids!(2),
             x_second_amount_expected,
             y_second_amount_expected,
+            dec!(1),
         );
-        helper.removable_liquidity_success(nft_ids!(1, 2), x_amount_expected, y_amount_expected);
+        helper.removable_liquidity_success(
+            nft_ids!(1, 2),
+            x_amount_expected,
+            y_amount_expected,
+            dec!(1),
+        );
         helper.remove_liquidity_success(nft_ids!(1, 2), x_amount_expected, y_amount_expected);
     }
 
@@ -2483,5 +2495,15 @@ mod precision_pool_remove_liquidity {
             dec!(4.106171798629102106),
             dec!(18.525588973638665861),
         );
+    }
+
+    #[test]
+    fn test_removable_liquidity_minimum_removable_fraction() {
+        removable_liquidity_with_remove_hook(
+            nft_ids!(1),
+            dec!(9.999999999999999997),
+            dec!(7.457210849065006033),
+            dec!(0.9),
+        )
     }
 }
