@@ -55,6 +55,7 @@ mod precision_pool {
             next_sync_time              => PUBLIC;
             observations_limit          => PUBLIC;
             observation                 => PUBLIC;
+            oldest_observation_at       => PUBLIC;
             observation_intervals       => PUBLIC;
             observations_stored         => PUBLIC;
             last_observation_index      => PUBLIC;
@@ -2202,6 +2203,14 @@ mod precision_pool {
         /// A `u16` representing the current number of observations stored.
         pub fn observations_stored(&self) -> u16 {
             self.oracle.observations_stored()
+        }
+
+        /// Returns the timestamp of the oldest observation stored in the oracle.
+        ///
+        /// # Returns
+        /// An `Option<u64>` representing the timestamp of the oldest observation if it exists, or `None` if no observations have been stored yet.
+        pub fn oldest_observation_at(&self) -> Option<u64> {
+            self.oracle.oldest_observation_at()
         }
 
         /// Returns the index of the most recent observation stored in the oracle (for testing).

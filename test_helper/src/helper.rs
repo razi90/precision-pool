@@ -1205,6 +1205,19 @@ impl PoolTestHelper {
             .new_instruction("last_observation_index", 1, 0);
         self
     }
+
+    pub fn oldest_observation_at(&mut self) -> &mut PoolTestHelper {
+        let manifest_builder = mem::take(&mut self.registry.env.manifest_builder);
+        self.registry.env.manifest_builder = manifest_builder.call_method(
+            self.pool_address.unwrap(),
+            "oldest_observation_at",
+            manifest_args!(),
+        );
+        self.registry
+            .env
+            .new_instruction("oldest_observation_at", 1, 0);
+        self
+    }
 }
 
 pub fn add_liquidity_expect_failure(

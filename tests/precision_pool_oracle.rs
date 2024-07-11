@@ -45,8 +45,15 @@ mod precision_pool_oracle {
             .registry
             .execute_expect_success(false);
         let outputs: Vec<Option<u16>> = receipt.outputs("last_observation_index");
-        println!("Last observation index: {:?}", outputs);
 
         assert_eq!(outputs, vec![Some(1)]);
+
+        let receipt = helper
+            .oldest_observation_at()
+            .registry
+            .execute_expect_success(false);
+        let outputs: Vec<Option<u64>> = receipt.outputs("oldest_observation_at");
+
+        assert_eq!(outputs, vec![Some(1800)]);
     }
 }
