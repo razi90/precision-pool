@@ -681,8 +681,8 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
 name = "oracle"
-version = "1.2.1"
-source = "git+https://github.com/ociswap/oracle?tag=v1.2.1#a2d7eb6990d8c1563bcc55b6a21c501bb2fd6a2f"
+version = "1.2.2"
+source = "git+https://github.com/ociswap/oracle?tag=v1.2.2#7f1d3583d7fa49169e5fa86c62d18bf277bbd364"
 dependencies = [
  "common",
  "sbor",
