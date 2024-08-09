@@ -115,4 +115,21 @@ mod precision_pool_manifest_templates {
         )
         .err();
     }
+
+    #[test]
+    fn test_dump_claim_fees() {
+        let mut helper: PoolTestHelper = PoolTestHelper::new();
+        helper.instantiate_default(pdec!(1), true);
+        helper.claim_fees(nft_ids!(1));
+        let manifest_builder = mem::take(&mut helper.registry.env.manifest_builder)
+            .deposit_batch(helper.registry.env.account);
+        dump_manifest_to_file_system(
+            manifest_builder.object_names(),
+            &manifest_builder.build(),
+            "./transaction-manifest",
+            Some("claim_fees"),
+            &NetworkDefinition::simulator(),
+        )
+        .err();
+    }
 }
