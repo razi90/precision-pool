@@ -34,7 +34,7 @@ mod precision_pool {
             y_address                   => PUBLIC;
             x_divisibility              => PUBLIC;
             y_divisibility              => PUBLIC;
-            vault_amounts               => PUBLIC;
+            total_liquidity             => PUBLIC;
             lp_address                  => PUBLIC;
             price_sqrt                  => PUBLIC;
             active_tick                 => PUBLIC;
@@ -65,8 +65,11 @@ mod precision_pool {
     struct PrecisionPool {
         pool_address: ComponentAddress,
 
-        x_vault: Vault,
-        y_vault: Vault,
+        x_liquidity: Vault,
+        y_liquidity: Vault,
+
+        x_fees: Vault,
+        y_fees: Vault,
 
         tick_spacing: u32,
         max_liquidity_per_tick: PreciseDecimal,
@@ -206,9 +209,9 @@ mod precision_pool {
                 .map(|(component_address, bucket)| (component_address, Vault::with_bucket(bucket)))
                 .collect();
 
-            // Initialize vaults for token X and Y.
-            let x_vault: Vault = Vault::new(x_address);
-            let y_vault: Vault = Vault::new(y_address);
+            // Initialize vaults for liquidity of token X and Y.
+            let x_liquidity: Vault = Vault::new(x_address);
+            let y_liquidity: Vault = Vault::new(y_address);
 
             // Reserve an address for the new pool and set up LP token management.
             let (address_reservation, pool_address) =
@@ -240,8 +243,10 @@ mod precision_pool {
 
             // Instantiate the pool and set its initial state and metadata.
             let pool = (Self {
-                x_vault,
-                y_vault,
+                x_liquidity,
+                y_liquidity,
+                x_fees: Vault::new(x_address),
+                y_fees: Vault::new(y_address),
                 price_sqrt,
                 tick_spacing,
                 max_liquidity_per_tick: max_liquidity_per_tick(tick_spacing),
@@ -493,9 +498,9 @@ mod precision_pool {
                 "[Add liquidity]: Allowed liquidity is zero."
             );
 
-            // Deposit the calculated amounts of X and Y tokens into the pool's vaults.
-            self.x_vault.put(x_bucket.take(x_amount));
-            self.y_vault.put(y_bucket.take(y_amount));
+            // Deposit the calculated amounts of X and Y tokens into the pool's liquidity vaults.
+            self.x_liquidity.put(x_bucket.take(x_amount));
+            self.y_liquidity.put(y_bucket.take(y_amount));
 
             // Update the pool's active liquidity and active tick based on the added liquidity.
             self.update_active_liquidity(liquidity, price_left_sqrt, price_right_sqrt);
@@ -854,8 +859,8 @@ mod precision_pool {
 
             (
                 IndexMap::from([
-                    (self.x_vault.resource_address(), x_total_output),
-                    (self.y_vault.resource_address(), y_total_output),
+                    (self.x_liquidity.resource_address(), x_total_output),
+                    (self.y_liquidity.resource_address(), y_total_output),
                 ]),
                 minimum_removable_fraction,
             )
@@ -931,9 +936,9 @@ mod precision_pool {
                 );
                 self.refit_active_tick();
 
-                // Remove the specified liquidity amounts from the pool's vaults.
-                let mut x_output = self.x_vault.take(x_amount);
-                let mut y_output = self.y_vault.take(y_amount);
+                // Remove the specified liquidity amounts from the pool's liquidity vaults.
+                let mut x_output = self.x_liquidity.take(x_amount);
+                let mut y_output = self.y_liquidity.take(y_amount);
 
                 // Execute post-removal hooks.
                 let state_after = AfterRemoveLiquidityState {
@@ -1149,7 +1154,7 @@ mod precision_pool {
         /// # Returns
         /// * Resource address of the first token in this pool
         pub fn x_address(&self) -> ResourceAddress {
-            self.x_vault.resource_address()
+            self.x_liquidity.resource_address()
         }
 
         /// Retrieve the address of the second token in this pool
@@ -1157,7 +1162,7 @@ mod precision_pool {
         /// # Returns
         /// * Resource address of the second token in this pool
         pub fn y_address(&self) -> ResourceAddress {
-            self.y_vault.resource_address()
+            self.y_liquidity.resource_address()
         }
 
         /// Retrieves the global registry component associated with this pool.
@@ -1318,8 +1323,8 @@ mod precision_pool {
                 y_fees += y_claimable;
             }
             IndexMap::from([
-                (self.x_vault.resource_address(), x_fees),
-                (self.y_vault.resource_address(), y_fees),
+                (self.x_fees.resource_address(), x_fees),
+                (self.y_fees.resource_address(), y_fees),
             ])
         }
 
@@ -1366,7 +1371,7 @@ mod precision_pool {
                 x_amount,
                 y_amount,
             });
-            (self.x_vault.take(x_amount), self.y_vault.take(y_amount))
+            (self.x_fees.take(x_amount), self.y_fees.take(y_amount))
         }
 
         /// Claims accumulated fees for all positions held in the provided non-fungible proofs.
@@ -1501,8 +1506,8 @@ mod precision_pool {
                 y_fees += y_total;
             }
             IndexMap::from([
-                (self.x_vault.resource_address(), x_fees),
-                (self.y_vault.resource_address(), y_fees),
+                (self.x_fees.resource_address(), x_fees),
+                (self.y_fees.resource_address(), y_fees),
             ])
         }
 
@@ -1525,28 +1530,31 @@ mod precision_pool {
             state: SwapState,
             mut input_bucket: Bucket,
         ) -> (Bucket, Bucket) {
-            // Aggregate input tokens with liquidity provider fees.
-            let input_with_lp_fees = input_bucket.take(state.input + state.fee_lp_input);
+            // Take input net and fee from the input bucket which afterwards gets returned as remainder.
+            let input_net = input_bucket.take(state.input);
+            let fee_lp = input_bucket.take(state.fee_lp_input);
             // Deposit protocol fees into the designated vault.
             self.deposit_protocol_fees(input_bucket.take(state.fee_protocol_input));
 
             match state.swap_type {
                 SwapType::BuyX => {
-                    // Withdraw the specified output amount from the `x` vault.
-                    let output = self.x_vault.take(state.output);
+                    // Withdraw the specified output amount from the `x` liquidity vault.
+                    let output = self.x_liquidity.take(state.output);
 
-                    // Deposit the input tokens with fees into the `y` vault and update the global fee count.
-                    self.y_vault.put(input_with_lp_fees);
+                    // Deposit the input net and fee tokens into the vaults and update the global fee count.
+                    self.y_liquidity.put(input_net);
+                    self.y_fees.put(fee_lp);
                     self.y_lp_fee = state.global_input_fee_lp;
 
                     (output, input_bucket)
                 }
                 SwapType::SellX => {
-                    // Withdraw the specified output amount from the `y` vault.
-                    let output = self.y_vault.take(state.output);
+                    // Withdraw the specified output amount from the `y` liquidity vault.
+                    let output = self.y_liquidity.take(state.output);
 
-                    // Deposit the input tokens with fees into the `x` vault and update the global fee count.
-                    self.x_vault.put(input_with_lp_fees);
+                    // Deposit the input net and fee tokens into the vaults and update the global fee count.
+                    self.x_liquidity.put(input_net);
+                    self.x_fees.put(fee_lp);
                     self.x_lp_fee = state.global_input_fee_lp;
 
                     (output, input_bucket)
@@ -1690,7 +1698,7 @@ mod precision_pool {
         /// # Returns
         /// * The divisibility of the X token
         pub fn x_divisibility(&self) -> u8 {
-            self.x_vault
+            self.x_liquidity
                 .resource_manager()
                 .resource_type()
                 .divisibility()
@@ -1702,21 +1710,27 @@ mod precision_pool {
         /// # Returns
         /// * The divisibility of the Y token
         pub fn y_divisibility(&self) -> u8 {
-            self.y_vault
+            self.y_liquidity
                 .resource_manager()
                 .resource_type()
                 .divisibility()
                 .unwrap()
         }
 
-        /// Retrieve the amounts of the X and Y tokens in this pool.
+        /// Retrieve the amounts of the X and Y token liquidity in this pool.
         ///
         /// # Returns
         /// * `IndexMap<ResourceAddress, Decimal>` - A map containing the resource addresses and their corresponding amounts.
-        pub fn vault_amounts(&self) -> IndexMap<ResourceAddress, Decimal> {
+        pub fn total_liquidity(&self) -> IndexMap<ResourceAddress, Decimal> {
             IndexMap::from([
-                (self.x_vault.resource_address(), self.x_vault.amount()),
-                (self.y_vault.resource_address(), self.y_vault.amount()),
+                (
+                    self.x_liquidity.resource_address(),
+                    self.x_liquidity.amount(),
+                ),
+                (
+                    self.y_liquidity.resource_address(),
+                    self.y_liquidity.amount(),
+                ),
             ])
         }
 
@@ -1892,9 +1906,9 @@ mod precision_pool {
 
             // Withdraws the specified amount from the appropriate liquidity vault.
             let output_bucket = if address == self.x_address() {
-                self.x_vault.take(amount)
+                self.x_liquidity.take(amount)
             } else {
-                self.y_vault.take(amount)
+                self.y_liquidity.take(amount)
             };
 
             // Calculates the loan fee based on the specified rate and adds it to the borrowed amount to determine the total amount due.
@@ -1973,9 +1987,9 @@ mod precision_pool {
 
             // Return the principal amount to the correct vault based on the token address.
             if terms.address == self.x_address() {
-                self.x_vault.put(loan_repayment.take(loan_amount));
+                self.x_liquidity.put(loan_repayment.take(loan_amount));
             } else {
-                self.y_vault.put(loan_repayment.take(loan_amount));
+                self.y_liquidity.put(loan_repayment.take(loan_amount));
             }
 
             // Burn the loan terms NFT to officially close the loan.
