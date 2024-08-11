@@ -1062,14 +1062,16 @@ impl PoolTestHelper {
             .removable_liquidity(lp_positions)
             .registry
             .execute_expect_success(true);
-        let output_amounts: Vec<(Decimal, Decimal, Decimal)> =
+        let output_amounts: Vec<(IndexMap<ResourceAddress, Decimal>, Decimal)> =
             receipt.outputs("removable_liquidity");
 
         assert_eq!(
             output_amounts,
             vec![(
-                x_output_expected,
-                y_output_expected,
+                IndexMap::from([
+                    (self.x_address(), x_output_expected),
+                    (self.y_address(), y_output_expected),
+                ]),
                 minimum_removable_fraction
             )],
             "\nX Amount = {:?}, Y Amount {:?}",
@@ -1112,11 +1114,15 @@ impl PoolTestHelper {
             .claimable_fees(lp_positions)
             .registry
             .execute_expect_success(false);
-        let output_amounts: Vec<(Decimal, Decimal)> = receipt.outputs("claimable_fees");
+        let output_amounts: Vec<IndexMap<ResourceAddress, Decimal>> =
+            receipt.outputs("claimable_fees");
 
         assert_eq!(
             output_amounts,
-            vec![(x_fee_expected, y_fee_expected)],
+            vec![IndexMap::from([
+                (self.x_address(), x_fee_expected),
+                (self.y_address(), y_fee_expected),
+            ])],
             "\nX Amount = {:?}, Y Amount {:?}",
             x_fee_expected,
             y_fee_expected

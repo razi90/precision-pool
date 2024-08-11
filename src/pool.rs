@@ -815,13 +815,12 @@ mod precision_pool {
         ///
         /// # Returns
         /// A tuple consisting of:
-        /// * The amount of token X that can be removed from the pool.
-        /// * The amount of token Y that can be removed from the pool.
+        /// * `IndexMap<ResourceAddress, Decimal>` - A map containing the resource addresses and the corresponding amount that can be removed from the pool.
         /// * The minimum removable fraction of the liquidity after hooks are executed.
         pub fn removable_liquidity(
             &self,
             lp_position_ids: Vec<NonFungibleLocalId>,
-        ) -> (Decimal, Decimal, Decimal) {
+        ) -> (IndexMap<ResourceAddress, Decimal>, Decimal) {
             let mut x_total_output = dec!(0);
             let mut y_total_output = dec!(0);
 
@@ -853,7 +852,13 @@ mod precision_pool {
                     false => HOOKS_MIN_REMAINING_BUCKET_FRACTION,
                 };
 
-            (x_total_output, y_total_output, minimum_removable_fraction)
+            (
+                IndexMap::from([
+                    (self.x_vault.resource_address(), x_total_output),
+                    (self.y_vault.resource_address(), y_total_output),
+                ]),
+                minimum_removable_fraction,
+            )
         }
 
         /// Removes liquidity from the pool and returns the corresponding amounts of token X and token Y.
@@ -1298,13 +1303,11 @@ mod precision_pool {
         /// * `lp_position_ids` - A vector of `NonFungibleLocalId` containing the IDs of liquidity positions for which fees are to be calculated.
         ///
         /// # Returns
-        /// A tuple containing two `Decimal`s:
-        /// - The first `Decimal` represents the total claimable `x` fees.
-        /// - The second `Decimal` represents the total claimable `y` fees.
+        /// - `IndexMap<ResourceAddress, Decimal>` - A map containing the resource addresses and their corresponding total claimable fees.
         pub fn claimable_fees(
             &self,
             lp_position_ids: Vec<NonFungibleLocalId>,
-        ) -> (Decimal, Decimal) {
+        ) -> IndexMap<ResourceAddress, Decimal> {
             let mut x_fees = dec!(0);
             let mut y_fees = dec!(0);
             for position_id in lp_position_ids {
@@ -1314,7 +1317,10 @@ mod precision_pool {
                 x_fees += x_claimable;
                 y_fees += y_claimable;
             }
-            (x_fees, y_fees)
+            IndexMap::from([
+                (self.x_vault.resource_address(), x_fees),
+                (self.y_vault.resource_address(), y_fees),
+            ])
         }
 
         /// Claims the accumulated fees for a given liquidity position.
