@@ -46,7 +46,6 @@ fn test_getters() {
         .execute_expect_success(false);
 
     helper.price_sqrt();
-    helper.active_liquidity();
     helper.input_fee_rate();
     helper.flash_loan_fee_rate();
 
@@ -68,27 +67,6 @@ fn test_getters() {
             vec![flash_loan_fee_rate]
         )
     );
-}
-
-#[test]
-fn test_active_liquidity() {
-    let active_liquidity_expected = pdec!(405.040831741441326012844520303631241918);
-
-    let mut helper = PoolTestHelper::new();
-    helper
-        .instantiate_default(pdec!(1), false)
-        .registry
-        .execute_expect_success(false);
-
-    helper.add_liquidity_default(-500, 500, dec!(10), dec!(10));
-
-    helper.active_liquidity();
-
-    let receipt = helper.registry.execute_expect_success(false);
-
-    let active_liquidity_returned: Vec<PreciseDecimal> = receipt.outputs("active_liquidity");
-
-    assert_eq!(active_liquidity_returned, vec![active_liquidity_expected]);
 }
 
 #[test]

@@ -38,7 +38,6 @@ mod precision_pool {
             lp_address                  => PUBLIC;
             price_sqrt                  => PUBLIC;
             active_tick                 => PUBLIC;
-            active_liquidity            => PUBLIC;
             input_fee_rate              => PUBLIC;
             fee_protocol_share          => PUBLIC;
             flash_loan_fee_rate         => PUBLIC;
@@ -1643,16 +1642,6 @@ mod precision_pool {
         /// * The square root of the current price
         pub fn price_sqrt(&self) -> PreciseDecimal {
             self.price_sqrt
-        }
-
-        /// Retrieves the current active liquidity,
-        /// i.e. the virtual liquidity of the current subpool,
-        /// if any, otherwise zero.
-        ///
-        /// # Returns
-        /// * The current active liquidity
-        pub fn active_liquidity(&self) -> PreciseDecimal {
-            self.active_liquidity
         }
 
         /// Retrieves the last value of the input fee rate.
