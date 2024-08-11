@@ -690,8 +690,8 @@ impl PoolTestHelper {
         self.getter("active_liquidity")
     }
 
-    pub fn vault_amounts(&mut self) -> &mut PoolTestHelper {
-        self.getter("vault_amounts")
+    pub fn total_liquidity(&mut self) -> &mut PoolTestHelper {
+        self.getter("total_liquidity")
     }
 
     pub fn input_fee_rate(&mut self) -> &mut PoolTestHelper {
@@ -1139,11 +1139,14 @@ impl PoolTestHelper {
             .total_fees(lp_position_ids)
             .registry
             .execute_expect_success(false);
-        let output_amounts: Vec<(Decimal, Decimal)> = receipt.outputs("total_fees");
+        let output_amounts: Vec<IndexMap<ResourceAddress, Decimal>> = receipt.outputs("total_fees");
 
         assert_eq!(
             output_amounts,
-            vec![(x_fee_expected, y_fee_expected)],
+            vec![IndexMap::from([
+                (self.x_address(), x_fee_expected),
+                (self.y_address(), y_fee_expected),
+            ])],
             "\nX Amount = {:?}, Y Amount {:?}",
             x_fee_expected,
             y_fee_expected

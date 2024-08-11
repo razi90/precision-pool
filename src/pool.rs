@@ -1486,10 +1486,11 @@ mod precision_pool {
         /// * `lp_position_ids` - A vector of `NonFungibleLocalId` containing the IDs of liquidity positions for which fees are to be calculated.
         ///
         /// # Returns
-        /// A tuple containing two `Decimal`s:
-        /// - The first `Decimal` represents the total `x` fees.
-        /// - The second `Decimal` represents the total `y` fees.
-        pub fn total_fees(&self, lp_position_ids: Vec<NonFungibleLocalId>) -> (Decimal, Decimal) {
+        /// - `IndexMap<ResourceAddress, Decimal>` - A map containing the resource addresses and their corresponding total fees.
+        pub fn total_fees(
+            &self,
+            lp_position_ids: Vec<NonFungibleLocalId>,
+        ) -> IndexMap<ResourceAddress, Decimal> {
             let mut x_fees = dec!(0);
             let mut y_fees = dec!(0);
             for position_id in lp_position_ids {
@@ -1499,7 +1500,10 @@ mod precision_pool {
                 x_fees += x_total;
                 y_fees += y_total;
             }
-            (x_fees, y_fees)
+            IndexMap::from([
+                (self.x_vault.resource_address(), x_fees),
+                (self.y_vault.resource_address(), y_fees),
+            ])
         }
 
         /// Executes a swap, handling deposits and withdrawals based on the swap type.
