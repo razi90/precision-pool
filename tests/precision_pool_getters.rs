@@ -92,7 +92,7 @@ fn test_active_liquidity() {
 }
 
 #[test]
-fn test_vault_amounts() {
+fn test_total_liquidity() {
     let mut helper = PoolTestHelper::new();
     helper
         .instantiate_default(pdec!(1), false)
@@ -101,19 +101,19 @@ fn test_vault_amounts() {
 
     helper.add_liquidity_default(-500, 500, dec!(10), dec!(10));
 
-    helper.vault_amounts();
+    helper.total_liquidity();
 
-    let vault_amounts_expected = IndexMap::from([
+    let total_liquidity_expected = IndexMap::from([
         (helper.x_address(), dec!(10)),
         (helper.y_address(), dec!(10)),
     ]);
 
     let receipt = helper.registry.execute_expect_success(false);
 
-    let vault_amounts_returned: Vec<IndexMap<ResourceAddress, Decimal>> =
-        receipt.outputs("vault_amounts");
+    let total_liquidity_returned: Vec<IndexMap<ResourceAddress, Decimal>> =
+        receipt.outputs("total_liquidity");
 
-    assert_eq!(vault_amounts_returned, vec![vault_amounts_expected]);
+    assert_eq!(total_liquidity_returned, vec![total_liquidity_expected]);
 }
 
 #[test]

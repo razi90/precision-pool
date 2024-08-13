@@ -690,8 +690,8 @@ impl PoolTestHelper {
         self.getter("active_liquidity")
     }
 
-    pub fn vault_amounts(&mut self) -> &mut PoolTestHelper {
-        self.getter("vault_amounts")
+    pub fn total_liquidity(&mut self) -> &mut PoolTestHelper {
+        self.getter("total_liquidity")
     }
 
     pub fn input_fee_rate(&mut self) -> &mut PoolTestHelper {
