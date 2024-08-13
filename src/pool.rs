@@ -61,6 +61,7 @@ mod precision_pool {
             execute_after_instantiate   => restrict_to: [blueprint];
         }
     }
+
     struct PrecisionPool {
         pool_address: ComponentAddress,
 
@@ -1634,6 +1635,7 @@ mod precision_pool {
                 SwapType::SellX => (self.x_lp_fee, self.y_lp_fee),
             }
         }
+
         /// This should not be used in isolation to judge the merit of a trade,
         /// but be used in combination with the liquidity distribution
         /// along the different price intervals.
