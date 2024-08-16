@@ -20,6 +20,7 @@ mod precision_pool_instantiate {
         helper
             .registry
             .instantiate_default(helper.registry.admin_badge_address());
+        helper.set_whitelist_registry();
         let receipt = helper
             .instantiate(
                 helper.x_address(),
@@ -50,6 +51,7 @@ mod precision_pool_instantiate {
         helper
             .registry
             .instantiate_default(helper.registry.admin_badge_address());
+        helper.set_whitelist_registry();
         helper
             .instantiate(
                 helper.x_address(),
@@ -77,6 +79,7 @@ mod precision_pool_instantiate {
             "5df173925d7814e488512f12cb03c6edfe2b3ea39c24538290476c34ba17",
         )
         .unwrap();
+        helper.set_whitelist_registry();
         helper
             .instantiate(
                 helper.x_address(),
@@ -153,6 +156,7 @@ mod precision_pool_instantiate {
         helper
             .registry
             .instantiate_default(helper.registry.admin_badge_address());
+        helper.set_whitelist_registry();
         helper
             .instantiate(
                 helper.j_nft_address(),
@@ -173,6 +177,7 @@ mod precision_pool_instantiate {
         helper
             .registry
             .instantiate_default(helper.registry.admin_badge_address());
+        helper.set_whitelist_registry();
         helper
             .instantiate(
                 helper.j_nft_address(),
@@ -193,6 +198,7 @@ mod precision_pool_instantiate {
         helper
             .registry
             .instantiate_default(helper.registry.admin_badge_address());
+        helper.set_whitelist_registry();
         helper
             .instantiate(
                 helper.x_address(),
@@ -213,6 +219,7 @@ mod precision_pool_instantiate {
         helper
             .registry
             .instantiate_default(helper.registry.admin_badge_address());
+        helper.set_whitelist_registry();
         // a_address < b_address
         helper.instantiate(
             helper.b_address(),
@@ -232,6 +239,7 @@ mod precision_pool_instantiate {
         helper
             .registry
             .instantiate_default(helper.registry.admin_badge_address());
+        helper.set_whitelist_registry();
         helper.instantiate(
             helper.x_address(),
             helper.y_address(),
@@ -254,6 +262,7 @@ mod precision_pool_instantiate {
 
     fn instantiate_with_input_fee_rate_test(input_fee_rate: Decimal, expect_success: bool) {
         let mut helper = PoolTestHelper::new();
+        helper.set_whitelist_registry();
         helper.instantiate(
             helper.x_address(),
             helper.y_address(),
@@ -276,6 +285,7 @@ mod precision_pool_instantiate {
         expect_success: bool,
     ) {
         let mut helper = PoolTestHelper::new();
+        helper.set_whitelist_registry();
         helper.instantiate(
             helper.x_address(),
             helper.y_address(),
@@ -355,6 +365,70 @@ mod precision_pool_instantiate {
     #[test]
     fn test_instantiate_with_flash_loan_fee_rate_fail_higher_than_one() {
         instantiate_with_flash_loan_fee_rate_test(dec!(1) + Decimal::ATTO, false);
+    }
+
+    #[test]
+    fn test_instantiate_registry_metadata_other_value_type() {
+        let mut helper = PoolTestHelper::new();
+        helper
+            .registry
+            .instantiate_default(helper.registry.admin_badge_address());
+        helper.set_whitelist_registry_value("FAKE");
+        helper
+            .instantiate(
+                helper.x_address(),
+                helper.y_address(),
+                pdec!(1),
+                dec!(0),
+                dec!(0),
+                helper.registry.registry_address.unwrap(),
+                vec![],
+            )
+            .registry
+            .execute_expect_failure(false);
+    }
+
+    #[test]
+    fn test_instantiate_registry_metadata_other_package_address() {
+        let mut helper = PoolTestHelper::new();
+        helper
+            .registry
+            .instantiate_default(helper.registry.admin_badge_address());
+        let package_address = helper.registry.env.package_address("precision_pool");
+        let global_package_address: GlobalAddress = package_address.into();
+        helper.set_whitelist_registry_value(global_package_address);
+        helper
+            .instantiate(
+                helper.x_address(),
+                helper.y_address(),
+                pdec!(1),
+                dec!(0),
+                dec!(0),
+                helper.registry.registry_address.unwrap(),
+                vec![],
+            )
+            .registry
+            .execute_expect_failure(false);
+    }
+
+    #[test]
+    fn test_instantiate_registry_metadata_missing() {
+        let mut helper = PoolTestHelper::new();
+        helper
+            .registry
+            .instantiate_default(helper.registry.admin_badge_address());
+        helper
+            .instantiate(
+                helper.x_address(),
+                helper.y_address(),
+                pdec!(1),
+                dec!(0),
+                dec!(0),
+                helper.registry.registry_address.unwrap(),
+                vec![],
+            )
+            .registry
+            .execute_expect_failure(false);
     }
 
     /*

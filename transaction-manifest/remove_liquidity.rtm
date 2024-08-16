@@ -6,20 +6,20 @@ CALL_METHOD
 CALL_METHOD
     Address("account_sim1c8m6h4yv2x9ca0wx5ddtl0nctqmjt2t740wfjgj9w8sdz82zf8ppcr")
     "withdraw_non_fungibles"
-    Address("resource_sim1nf57rdws5egmu70mx0shqgcmc5xz99ekzvjcchra0ksftc3fjcuwrz")
+    Address("resource_sim1n2k6cl74uhdrxdrqkvan7xaaqv2v35lvs82jpwytrxghcceupdjj52")
     Array<NonFungibleLocalId>(
         NonFungibleLocalId("#1#")
     )
 ;
 TAKE_NON_FUNGIBLES_FROM_WORKTOP
-    Address("resource_sim1nf57rdws5egmu70mx0shqgcmc5xz99ekzvjcchra0ksftc3fjcuwrz")
+    Address("resource_sim1n2k6cl74uhdrxdrqkvan7xaaqv2v35lvs82jpwytrxghcceupdjj52")
     Array<NonFungibleLocalId>(
         NonFungibleLocalId("#1#")
     )
     Bucket("lp_bucket_1")
 ;
 CALL_METHOD
-    Address("component_sim1cq9uf6qzpguhs3cr65qn7mc822yhwad088q69wzcckzqfc3nwtxyyn")
+    Address("component_sim1cp57rdws5egmu70mx0shqgcmc5xz99ekzvjcchra0ksftc3fq0wgcz")
     "remove_liquidity"
     Bucket("lp_bucket_1")
 ;

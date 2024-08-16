@@ -120,4 +120,22 @@ mod test_hook_precision_pool {
 
         hook_helper.execute_all_calls(hooks);
     }
+
+    #[test]
+    #[should_panic]
+    fn test_hook_not_whitelisted() {
+        let mut hook_helper = HookTestTestHelper::new();
+
+        // Instantiate hook
+        let calls = vec![HookCall::BeforeInstantiate, HookCall::AfterInstantiate];
+        let access = TestAccess::new();
+        let hooks = vec![hook_helper.instantiate_test_hook_output(calls, access)];
+
+        hook_helper.pool.set_whitelist_registry();
+        // Do not whitelist the current "TestHook" in package "test_hook"
+
+        hook_helper
+            .pool
+            .instantiate_default_with_hooks(pdec!(1), hooks, false);
+    }
 }
