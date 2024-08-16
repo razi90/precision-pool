@@ -204,8 +204,8 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "1.2.0"
-source = "git+https://github.com/ociswap/pools-common?tag=v1.2.0#38abe9af842843b9f3f856cbcca6be53532bb67a"
+version = "1.2.1"
+source = "git+https://github.com/ociswap/pools-common?tag=v1.2.1#0a1f2b23f94d1f6b2bdcf5c545f80c24248cefe1"
 dependencies = [
  "sbor",
  "scrypto",
@@ -681,8 +681,8 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
 name = "oracle"
-version = "1.2.3"
-source = "git+https://github.com/ociswap/oracle?tag=v1.2.3#147fd89d48e5671b055a4522ab4f49d198497828"
+version = "1.2.4"
+source = "git+https://github.com/ociswap/oracle?tag=v1.2.4#fc83098bcc29ed49a80074099c0bd2a86156df2d"
 dependencies = [
  "common",
  "sbor",
