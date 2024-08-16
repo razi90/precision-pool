@@ -373,7 +373,28 @@ mod precision_pool_instantiate {
         helper
             .registry
             .instantiate_default(helper.registry.admin_badge_address());
-        helper.set_whitelist_registry_value("FAKE");
+        helper.set_whitelist_registry_value("OTHER");
+        helper
+            .instantiate(
+                helper.x_address(),
+                helper.y_address(),
+                pdec!(1),
+                dec!(0),
+                dec!(0),
+                helper.registry.registry_address.unwrap(),
+                vec![],
+            )
+            .registry
+            .execute_expect_failure(false);
+    }
+
+    #[test]
+    fn test_instantiate_registry_metadata_other_value_type_vec() {
+        let mut helper = PoolTestHelper::new();
+        helper
+            .registry
+            .instantiate_default(helper.registry.admin_badge_address());
+        helper.set_whitelist_registry_value(vec!["FAKE"]);
         helper
             .instantiate(
                 helper.x_address(),
@@ -396,7 +417,102 @@ mod precision_pool_instantiate {
             .instantiate_default(helper.registry.admin_badge_address());
         let package_address = helper.registry.env.package_address("precision_pool");
         let global_package_address: GlobalAddress = package_address.into();
-        helper.set_whitelist_registry_value(global_package_address);
+        helper.set_whitelist_registry_value(vec![global_package_address]);
+        helper
+            .instantiate(
+                helper.x_address(),
+                helper.y_address(),
+                pdec!(1),
+                dec!(0),
+                dec!(0),
+                helper.registry.registry_address.unwrap(),
+                vec![],
+            )
+            .registry
+            .execute_expect_failure(false);
+    }
+
+    #[test]
+    fn test_instantiate_registry_metadata_two_package_address_registry_and_other() {
+        let mut helper = PoolTestHelper::new();
+        helper
+            .registry
+            .instantiate_default(helper.registry.admin_badge_address());
+        let package_address1 = helper.registry.env.package_address("registry");
+        let global_package_address1: GlobalAddress = package_address1.into();
+        let package_address2 = helper.registry.env.package_address("precision_pool");
+        let global_package_address2: GlobalAddress = package_address2.into();
+        helper.set_whitelist_registry_value(vec![global_package_address1, global_package_address2]);
+        helper
+            .instantiate(
+                helper.x_address(),
+                helper.y_address(),
+                pdec!(1),
+                dec!(0),
+                dec!(0),
+                helper.registry.registry_address.unwrap(),
+                vec![],
+            )
+            .registry
+            .execute_expect_success(false);
+    }
+
+    #[test]
+    fn test_instantiate_registry_metadata_two_same_registry_package_addresses() {
+        let mut helper = PoolTestHelper::new();
+        helper
+            .registry
+            .instantiate_default(helper.registry.admin_badge_address());
+        let package_address1 = helper.registry.env.package_address("registry");
+        let global_package_address1: GlobalAddress = package_address1.into();
+        let package_address2 = helper.registry.env.package_address("registry");
+        let global_package_address2: GlobalAddress = package_address2.into();
+        helper.set_whitelist_registry_value(vec![global_package_address1, global_package_address2]);
+        helper
+            .instantiate(
+                helper.x_address(),
+                helper.y_address(),
+                pdec!(1),
+                dec!(0),
+                dec!(0),
+                helper.registry.registry_address.unwrap(),
+                vec![],
+            )
+            .registry
+            .execute_expect_success(false);
+    }
+
+    #[test]
+    fn test_instantiate_registry_metadata_two_addresses_registry_and_resource() {
+        let mut helper = PoolTestHelper::new();
+        helper
+            .registry
+            .instantiate_default(helper.registry.admin_badge_address());
+        let global_package_address1: GlobalAddress =
+            helper.registry.env.package_address("registry").into();
+        let global_package_address2: GlobalAddress = helper.registry.env.x_address.into();
+        helper.set_whitelist_registry_value(vec![global_package_address1, global_package_address2]);
+        helper
+            .instantiate(
+                helper.x_address(),
+                helper.y_address(),
+                pdec!(1),
+                dec!(0),
+                dec!(0),
+                helper.registry.registry_address.unwrap(),
+                vec![],
+            )
+            .registry
+            .execute_expect_success(false);
+    }
+
+    #[test]
+    fn test_instantiate_registry_metadata_empty_vec() {
+        let mut helper = PoolTestHelper::new();
+        helper
+            .registry
+            .instantiate_default(helper.registry.admin_badge_address());
+        helper.set_whitelist_registry_value(Vec::<GlobalAddress>::new());
         helper
             .instantiate(
                 helper.x_address(),

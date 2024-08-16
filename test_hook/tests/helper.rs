@@ -91,7 +91,7 @@ impl HookTestTestHelper {
     pub fn execute_all_calls(&mut self, hooks: Vec<(ComponentAddress, ResourceAddress)>) {
         // Whitelist registry and hook
         self.pool.set_whitelist_registry();
-        self.pool.set_whitelist_hook("test_hook", "TestHook");
+        self.pool.set_whitelist_hook("test_hook");
 
         // Instantiate pool
         self.pool

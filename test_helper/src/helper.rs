@@ -1227,66 +1227,30 @@ impl PoolTestHelper {
     }
 
     pub fn set_whitelist_registry(&mut self) -> &mut PoolTestHelper {
-        self.set_whitelist_package("registries", "registry", "registry")
+        self.set_whitelist_packages("registry_packages", vec!["registry"])
     }
 
     pub fn set_whitelist_registry_value(
         &mut self,
         value: impl ToMetadataEntry,
     ) -> &mut PoolTestHelper {
-        self.set_whitelist_value("registries", "registry", "registry", value)
+        self.set_metadata("registry_packages", value)
     }
 
-    pub fn set_whitelist_hook(
+    pub fn set_whitelist_hook(&mut self, package_name: &str) -> &mut PoolTestHelper {
+        self.set_whitelist_packages("hook_packages", vec![package_name])
+    }
+
+    pub fn set_whitelist_packages(
         &mut self,
-        package_name: &str,
-        blueprint_name: &str,
+        metadata_key: &str,
+        package_names: Vec<&str>,
     ) -> &mut PoolTestHelper {
-        self.set_whitelist_package("hooks", package_name, blueprint_name)
-    }
-
-    pub fn set_whitelist_package(
-        &mut self,
-        namespace: &str,
-        package_name: &str,
-        blueprint_name: &str,
-    ) -> &mut PoolTestHelper {
-        let package_address = self.registry.env.package_address(package_name);
-        let global_package_address: GlobalAddress = package_address.into();
-        self.set_whitelist_value(
-            namespace,
-            package_name,
-            blueprint_name,
-            global_package_address,
-        )
-    }
-
-    pub fn set_whitelist_value(
-        &mut self,
-        namespace: &str,
-        package_name: &str,
-        blueprint_name: &str,
-        value: impl ToMetadataEntry,
-    ) -> &mut PoolTestHelper {
-        let package_address = self.registry.env.package_address(package_name);
-        let short_address = self.build_short_package_address(package_address);
-
-        let metadata_key = format!(
-            "packages.{}.{}.{}",
-            namespace,
-            blueprint_name.to_lowercase(),
-            short_address
-        );
-        self.set_metadata(metadata_key, value);
-        self
-    }
-
-    pub fn build_short_package_address(&mut self, package_address: PackageAddress) -> String {
-        let encoded_package_address = AddressBech32Encoder::for_simulator()
-            .encode(&package_address.to_vec())
-            .unwrap();
-        let short_package_address = &encoded_package_address[encoded_package_address.len() - 6..];
-        short_package_address.to_owned()
+        let global_package_addresses: Vec<GlobalAddress> = package_names
+            .iter()
+            .map(|package_name| self.registry.env.package_address(package_name).into())
+            .collect();
+        self.set_metadata(metadata_key, global_package_addresses)
     }
 
     pub fn set_metadata(
@@ -1682,7 +1646,7 @@ pub fn swap_with_hook_action_test(
     .collect();
     let mut helper = PoolTestHelper::new_with_packages(packages, true);
 
-    helper.set_whitelist_hook("test_hook", "TestSwapHook");
+    helper.set_whitelist_hook("test_hook");
 
     let package_address = helper.registry.env.package_address("test_hook");
     let manifest_builder = mem::replace(
@@ -1755,7 +1719,7 @@ pub fn removable_liquidity_with_remove_hook(
     let mut helper = PoolTestHelper::new_with_packages(packages, true);
 
     helper.set_whitelist_registry();
-    helper.set_whitelist_hook("test_hook", "TestHook");
+    helper.set_whitelist_hook("test_hook");
     helper.registry.execute_expect_success(false);
 
     let package_address = helper.registry.env.package_address("test_hook");

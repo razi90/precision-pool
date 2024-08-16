@@ -189,10 +189,11 @@ mod precision_pool {
                 "[Instantiate]: Address B should be a fungible token."
             );
 
-            assert_component_is_approved("registries", registry_address);
-            for (hook_address, _) in hook_badges.iter() {
-                assert_component_is_approved("hooks", hook_address.clone());
-            }
+            assert_components_are_approved("registry_packages", vec![registry_address]);
+            assert_components_are_approved(
+                "hook_packages",
+                hook_badges.iter().map(|(address, _)| *address).collect(),
+            );
 
             // Generate and execute hooks for additional functionalities before instantiation.
             let (hook_calls, mut hook_badges_bucket, hooks) = generate_calls_hooks(hook_badges);
