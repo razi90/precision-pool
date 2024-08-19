@@ -1,0 +1,40 @@
+CALL_METHOD
+    Address("account_sim1c8m6h4yv2x9ca0wx5ddtl0nctqmjt2t740wfjgj9w8sdz82zf8ppcr")
+    "lock_fee"
+    Decimal("5000")
+;
+CALL_METHOD
+    Address("account_sim1c8m6h4yv2x9ca0wx5ddtl0nctqmjt2t740wfjgj9w8sdz82zf8ppcr")
+    "create_proof_of_amount"
+    Address("resource_sim1t5m9c9hnvap9rta4a7kkfq2qaex53kcf7mtjthpagf87mnlr6spgsg")
+    Decimal("1")
+;
+SET_METADATA
+    Address("package_sim1p5eg9cg06z3qesfp3jmq3lsq3fdmk4pgcg46s4k7raxdtw8ql4fg9a")
+    "registry_components"
+    Enum<136u8>(
+        Array<Address>(
+            Address("component_sim1cpzcqnwlqvax740a8rlw2zncsa7qq6j7zl06hecuh2prf7qktuyee6")
+        )
+    )
+;
+CALL_METHOD
+    Address("account_sim1c8m6h4yv2x9ca0wx5ddtl0nctqmjt2t740wfjgj9w8sdz82zf8ppcr")
+    "create_proof_of_amount"
+    Address("resource_sim1t5m9c9hnvap9rta4a7kkfq2qaex53kcf7mtjthpagf87mnlr6spgsg")
+    Decimal("1")
+;
+SET_METADATA
+    Address("package_sim1p5eg9cg06z3qesfp3jmq3lsq3fdmk4pgcg46s4k7raxdtw8ql4fg9a")
+    "hook_packages"
+    Enum<136u8>(
+        Array<Address>(
+            Address("package_sim1p5tk86x78nq08k9q8hy9n7w99fv5zefkekeujkyerkrtydzunvrpzu")
+        )
+    )
+;
+CALL_METHOD
+    Address("account_sim1c8m6h4yv2x9ca0wx5ddtl0nctqmjt2t740wfjgj9w8sdz82zf8ppcr")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP")
+;
