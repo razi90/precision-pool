@@ -415,9 +415,8 @@ mod precision_pool_instantiate {
         helper
             .registry
             .instantiate_default(helper.registry.admin_badge_address());
-        let package_address = helper.registry.env.package_address("precision_pool");
-        let global_package_address: GlobalAddress = package_address.into();
-        helper.set_whitelist_registry_value(vec![global_package_address]);
+        let global_address: GlobalAddress = helper.registry.env.account.into();
+        helper.set_whitelist_registry_value(vec![global_address]);
         helper
             .instantiate(
                 helper.x_address(),
@@ -438,11 +437,9 @@ mod precision_pool_instantiate {
         helper
             .registry
             .instantiate_default(helper.registry.admin_badge_address());
-        let package_address1 = helper.registry.env.package_address("registry");
-        let global_package_address1: GlobalAddress = package_address1.into();
-        let package_address2 = helper.registry.env.package_address("precision_pool");
-        let global_package_address2: GlobalAddress = package_address2.into();
-        helper.set_whitelist_registry_value(vec![global_package_address1, global_package_address2]);
+        let global_address1: GlobalAddress = helper.registry.registry_address.unwrap().into();
+        let global_address2: GlobalAddress = helper.registry.env.account.into();
+        helper.set_whitelist_registry_value(vec![global_address1, global_address2]);
         helper
             .instantiate(
                 helper.x_address(),
@@ -463,11 +460,9 @@ mod precision_pool_instantiate {
         helper
             .registry
             .instantiate_default(helper.registry.admin_badge_address());
-        let package_address1 = helper.registry.env.package_address("registry");
-        let global_package_address1: GlobalAddress = package_address1.into();
-        let package_address2 = helper.registry.env.package_address("registry");
-        let global_package_address2: GlobalAddress = package_address2.into();
-        helper.set_whitelist_registry_value(vec![global_package_address1, global_package_address2]);
+        let global_address1: GlobalAddress = helper.registry.registry_address.unwrap().into();
+        let global_address2: GlobalAddress = helper.registry.registry_address.unwrap().into();
+        helper.set_whitelist_registry_value(vec![global_address1, global_address2]);
         helper
             .instantiate(
                 helper.x_address(),
@@ -488,10 +483,9 @@ mod precision_pool_instantiate {
         helper
             .registry
             .instantiate_default(helper.registry.admin_badge_address());
-        let global_package_address1: GlobalAddress =
-            helper.registry.env.package_address("registry").into();
-        let global_package_address2: GlobalAddress = helper.registry.env.x_address.into();
-        helper.set_whitelist_registry_value(vec![global_package_address1, global_package_address2]);
+        let global_address1: GlobalAddress = helper.registry.registry_address.unwrap().into();
+        let global_address2: GlobalAddress = helper.registry.env.x_address.into();
+        helper.set_whitelist_registry_value(vec![global_address1, global_address2]);
         helper
             .instantiate(
                 helper.x_address(),

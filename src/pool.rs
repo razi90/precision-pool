@@ -1,8 +1,9 @@
 use crate::{constants::*, pool_math::*, utils::*};
 use common::math::*;
+use common::metadata::{assert_component_packages_are_approved, assert_components_are_approved};
 use common::pools::{token_symbol, SwapType};
 use common::time::*;
-use common::utils::*;
+use common::utils::assert_within_bounds;
 use oracle::{AccumulatedObservation, ObservationInterval, Oracle};
 use precision_pool_hooks::*;
 use scrypto::prelude::*;
@@ -189,8 +190,8 @@ mod precision_pool {
                 "[Instantiate]: Address B should be a fungible token."
             );
 
-            assert_components_are_approved("registry_packages", vec![registry_address]);
-            assert_components_are_approved(
+            assert_components_are_approved("registry_components", vec![registry_address]);
+            assert_component_packages_are_approved(
                 "hook_packages",
                 hook_badges.iter().map(|(address, _)| *address).collect(),
             );

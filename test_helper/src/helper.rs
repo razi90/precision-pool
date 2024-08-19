@@ -1227,18 +1227,23 @@ impl PoolTestHelper {
     }
 
     pub fn set_whitelist_registry(&mut self) -> &mut PoolTestHelper {
-        self.set_whitelist_packages("registry_packages", vec!["registry"])
+        let registry_address = self.registry.registry_address.unwrap();
+        self.set_metadata("registry_components", vec![registry_address])
     }
 
     pub fn set_whitelist_registry_value(
         &mut self,
         value: impl ToMetadataEntry,
     ) -> &mut PoolTestHelper {
-        self.set_metadata("registry_packages", value)
+        self.set_metadata("registry_components", value)
     }
 
     pub fn set_whitelist_hook(&mut self, package_name: &str) -> &mut PoolTestHelper {
         self.set_whitelist_packages("hook_packages", vec![package_name])
+    }
+
+    pub fn set_whitelist_hook_value(&mut self, value: impl ToMetadataEntry) -> &mut PoolTestHelper {
+        self.set_metadata("hook_packages", value)
     }
 
     pub fn set_whitelist_packages(
