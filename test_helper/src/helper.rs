@@ -163,6 +163,7 @@ impl PoolTestHelper {
     pub fn instantiate_tick_spacing(&mut self, tick_spacing: u32) -> &mut PoolTestHelper {
         self.registry
             .instantiate_default(self.registry.admin_badge_address());
+        self.set_whitelist_registry();
         self.instantiate_complete(
             self.x_address(),
             self.y_address(),
@@ -511,7 +512,7 @@ impl PoolTestHelper {
 
         let outputs: Vec<u64> = self
             .registry
-            .execute_expect_success(true)
+            .execute_expect_success(false)
             .outputs("seconds_in_position");
 
         let mut seconds_inside_tests_output = seconds_inside_tests.clone();
@@ -594,7 +595,7 @@ impl PoolTestHelper {
             .add_liquidity_default_batch(&ONE_LP)
             .flash_loan_address()
             .registry
-            .execute_expect_success(true);
+            .execute_expect_success(false);
         let transient_address: ResourceAddress = receipt.outputs("flash_loan_address")[0];
 
         self.flash_loan(self.x_address(), loan_amount);
@@ -607,7 +608,7 @@ impl PoolTestHelper {
                 dec!(1),
             )
             .registry
-            .execute_expect_success(true);
+            .execute_expect_success(false);
         let output_buckets = receipt.output_buckets("repay_loan");
         assert_eq!(
             output_buckets,
@@ -810,6 +811,7 @@ impl PoolTestHelper {
         hooks: Vec<(ComponentAddress, ResourceAddress)>,
         verbose: bool,
     ) -> &mut PoolTestHelper {
+        self.set_whitelist_registry();
         self.instantiate(
             self.x_address(),
             self.y_address(),
@@ -993,7 +995,7 @@ impl PoolTestHelper {
         let receipt = self
             .swap(input_address, input_amount)
             .registry
-            .execute_expect_success(true);
+            .execute_expect_success(false);
         let output_buckets = receipt.output_buckets("swap");
 
         let (output_address, remainder_address) = if self.x_address() == input_address {
@@ -1020,7 +1022,7 @@ impl PoolTestHelper {
         let input_address = self.input_address(swap_type);
         self.swap(input_address, input_amount)
             .registry
-            .execute_expect_failure(true);
+            .execute_expect_failure(false);
     }
 
     pub fn remove_liquidity_success(
@@ -1032,7 +1034,7 @@ impl PoolTestHelper {
         let receipt = self
             .remove_liquidity(lp_positions)
             .registry
-            .execute_expect_success(true);
+            .execute_expect_success(false);
         let output_buckets = receipt.output_buckets("remove_liquidity");
 
         assert_eq!(
@@ -1057,7 +1059,7 @@ impl PoolTestHelper {
         let receipt = self
             .removable_liquidity(lp_positions)
             .registry
-            .execute_expect_success(true);
+            .execute_expect_success(false);
         let output_amounts: Vec<(IndexMap<ResourceAddress, Decimal>, Decimal)> =
             receipt.outputs("removable_liquidity");
 
@@ -1221,6 +1223,57 @@ impl PoolTestHelper {
         self.registry
             .env
             .new_instruction("oldest_observation_at", 1, 0);
+        self
+    }
+
+    pub fn set_whitelist_registry(&mut self) -> &mut PoolTestHelper {
+        let registry_address = self.registry.registry_address.unwrap();
+        self.set_metadata("registry_components", vec![registry_address])
+    }
+
+    pub fn set_whitelist_registry_value(
+        &mut self,
+        value: impl ToMetadataEntry,
+    ) -> &mut PoolTestHelper {
+        self.set_metadata("registry_components", value)
+    }
+
+    pub fn set_whitelist_hook(&mut self, package_name: &str) -> &mut PoolTestHelper {
+        self.set_whitelist_packages("hook_packages", vec![package_name])
+    }
+
+    pub fn set_whitelist_hook_value(&mut self, value: impl ToMetadataEntry) -> &mut PoolTestHelper {
+        self.set_metadata("hook_packages", value)
+    }
+
+    pub fn set_whitelist_packages(
+        &mut self,
+        metadata_key: &str,
+        package_names: Vec<&str>,
+    ) -> &mut PoolTestHelper {
+        let global_package_addresses: Vec<GlobalAddress> = package_names
+            .iter()
+            .map(|package_name| self.registry.env.package_address(package_name).into())
+            .collect();
+        self.set_metadata(metadata_key, global_package_addresses)
+    }
+
+    pub fn set_metadata(
+        &mut self,
+        key: impl Into<String>,
+        value: impl ToMetadataEntry,
+    ) -> &mut PoolTestHelper {
+        let precision_pool_package_address: GlobalAddress =
+            self.registry.env.package_address("precision_pool").into();
+        let manifest_builder = mem::take(&mut self.registry.env.manifest_builder);
+        self.registry.env.manifest_builder = manifest_builder
+            .create_proof_from_account_of_amount(
+                self.registry.env().account,
+                self.admin_badge_address(),
+                dec!(1),
+            )
+            .set_metadata(precision_pool_package_address, key, value);
+        self.registry.env.new_instruction("set_metadata", 2, 1);
         self
     }
 }
@@ -1598,6 +1651,8 @@ pub fn swap_with_hook_action_test(
     .collect();
     let mut helper = PoolTestHelper::new_with_packages(packages, true);
 
+    helper.set_whitelist_hook("test_hook");
+
     let package_address = helper.registry.env.package_address("test_hook");
     let manifest_builder = mem::replace(
         &mut helper.registry.env.manifest_builder,
@@ -1667,6 +1722,10 @@ pub fn removable_liquidity_with_remove_hook(
     .into_iter()
     .collect();
     let mut helper = PoolTestHelper::new_with_packages(packages, true);
+
+    helper.set_whitelist_registry();
+    helper.set_whitelist_hook("test_hook");
+    helper.registry.execute_expect_success(false);
 
     let package_address = helper.registry.env.package_address("test_hook");
     let manifest_builder = mem::replace(

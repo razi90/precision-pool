@@ -120,4 +120,137 @@ mod test_hook_precision_pool {
 
         hook_helper.execute_all_calls(hooks);
     }
+
+    fn hook_default_helper() -> (HookTestTestHelper, Vec<(ComponentAddress, ResourceAddress)>) {
+        let mut hook_helper = HookTestTestHelper::new();
+
+        // Instantiate hook
+        let calls = vec![HookCall::BeforeInstantiate, HookCall::AfterInstantiate];
+        let access = TestAccess::new();
+        let hooks = vec![hook_helper.instantiate_test_hook_output(calls, access)];
+
+        (hook_helper, hooks)
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_hook_whiteliste_missing() {
+        let (mut hook_helper, hooks) = hook_default_helper();
+        hook_helper.pool.set_whitelist_registry();
+        // Do not whitelist the current "TestHook" in package "test_hook"
+
+        hook_helper
+            .pool
+            .instantiate_default_with_hooks(pdec!(1), hooks, false);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_hook_whitelist_empty_vec() {
+        let (mut hook_helper, hooks) = hook_default_helper();
+
+        hook_helper.pool.set_whitelist_registry();
+        hook_helper
+            .pool
+            .set_whitelist_hook_value(Vec::<GlobalAddress>::new());
+
+        hook_helper
+            .pool
+            .instantiate_default_with_hooks(pdec!(1), hooks, false);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_hook_whitelist_other_value_type() {
+        let (mut hook_helper, hooks) = hook_default_helper();
+
+        hook_helper.pool.set_whitelist_registry();
+        hook_helper.pool.set_whitelist_hook_value("OTHER");
+
+        hook_helper
+            .pool
+            .instantiate_default_with_hooks(pdec!(1), hooks, false);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_hook_whitelist_other_value_vec_type() {
+        let (mut hook_helper, hooks) = hook_default_helper();
+
+        hook_helper.pool.set_whitelist_registry();
+        hook_helper.pool.set_whitelist_hook_value(vec!["OTHER"]);
+
+        hook_helper
+            .pool
+            .instantiate_default_with_hooks(pdec!(1), hooks, false);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_hook_whitelist_other_package_address() {
+        let (mut hook_helper, hooks) = hook_default_helper();
+
+        hook_helper.pool.set_whitelist_registry();
+        hook_helper.pool.set_whitelist_hook_value(vec![hook_helper
+            .pool
+            .registry
+            .env
+            .package_address("registry")]);
+
+        hook_helper
+            .pool
+            .instantiate_default_with_hooks(pdec!(1), hooks, false);
+    }
+
+    #[test]
+    fn test_hook_whitelist_two_package_addresses_hook_and_other() {
+        let (mut hook_helper, hooks) = hook_default_helper();
+
+        hook_helper.pool.set_whitelist_registry();
+        hook_helper.pool.set_whitelist_hook_value(vec![
+            hook_helper.pool.registry.env.package_address("test_hook"),
+            hook_helper.pool.registry.env.package_address("registry"),
+        ]);
+
+        hook_helper
+            .pool
+            .instantiate_default_with_hooks(pdec!(1), hooks, false);
+    }
+
+    #[test]
+    fn test_hook_whitelist_two_same_hook_package_addresses() {
+        let (mut hook_helper, hooks) = hook_default_helper();
+
+        hook_helper.pool.set_whitelist_registry();
+        hook_helper.pool.set_whitelist_hook_value(vec![
+            hook_helper.pool.registry.env.package_address("test_hook"),
+            hook_helper.pool.registry.env.package_address("test_hook"),
+        ]);
+
+        hook_helper
+            .pool
+            .instantiate_default_with_hooks(pdec!(1), hooks, false);
+    }
+
+    #[test]
+    fn test_hook_whitelist_two_package_addresses_hook_and_resource() {
+        let (mut hook_helper, hooks) = hook_default_helper();
+
+        hook_helper.pool.set_whitelist_registry();
+
+        let global_addresses: Vec<GlobalAddress> = vec![
+            hook_helper
+                .pool
+                .registry
+                .env
+                .package_address("test_hook")
+                .into(),
+            hook_helper.pool.registry.env.x_address.into(),
+        ];
+        hook_helper.pool.set_whitelist_hook_value(global_addresses);
+
+        hook_helper
+            .pool
+            .instantiate_default_with_hooks(pdec!(1), hooks, false);
+    }
 }

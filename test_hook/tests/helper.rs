@@ -76,7 +76,7 @@ impl HookTestTestHelper {
     ) -> (ComponentAddress, ResourceAddress) {
         self.instantiate_test_hook(calls, calls_access);
 
-        let receipt = self.execute(true);
+        let receipt = self.execute(false);
 
         let new_resource_ads = receipt
             .execution_receipt
@@ -89,9 +89,13 @@ impl HookTestTestHelper {
     }
 
     pub fn execute_all_calls(&mut self, hooks: Vec<(ComponentAddress, ResourceAddress)>) {
+        // Whitelist registry and hook
+        self.pool.set_whitelist_registry();
+        self.pool.set_whitelist_hook("test_hook");
+
         // Instantiate pool
         self.pool
-            .instantiate_default_with_hooks(pdec!(1), hooks, true);
+            .instantiate_default_with_hooks(pdec!(1), hooks, false);
 
         // Add liquidity
         for position in &ONE_LP {

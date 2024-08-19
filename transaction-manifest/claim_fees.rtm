@@ -6,7 +6,7 @@ CALL_METHOD
 CALL_METHOD
     Address("account_sim1c8m6h4yv2x9ca0wx5ddtl0nctqmjt2t740wfjgj9w8sdz82zf8ppcr")
     "create_proof_of_non_fungibles"
-    Address("resource_sim1nf57rdws5egmu70mx0shqgcmc5xz99ekzvjcchra0ksftc3fjcuwrz")
+    Address("resource_sim1n29gqafgdqzfulhsp6vlywpgqx9ahe4qfg8fw4evu7yag7ncf66en3")
     Array<NonFungibleLocalId>(
         NonFungibleLocalId("#1#")
     )
@@ -15,7 +15,7 @@ POP_FROM_AUTH_ZONE
     Proof("lp_proof_1")
 ;
 CALL_METHOD
-    Address("component_sim1cq9uf6qzpguhs3cr65qn7mc822yhwad088q69wzcckzqfc3nwtxyyn")
+    Address("component_sim1cpxqezy9jpk8eddzsr6z8ah6jdzd2hacc5tehulf5v4nulll00yjrq")
     "claim_fees"
     Proof("lp_proof_1")
 ;

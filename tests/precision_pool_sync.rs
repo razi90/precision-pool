@@ -33,7 +33,7 @@ mod precision_pool_sync {
         let receipt = helper.registry.execute_expect_success(false);
         let output: Vec<(Decimal, u64)> = receipt.outputs("sync");
 
-        assert_eq!(output, vec![(fee_protocol_share, 5321)]);
+        assert_eq!(output, vec![(fee_protocol_share, 5701)]);
     }
 
     #[test]
@@ -58,7 +58,7 @@ mod precision_pool_sync {
         let receipt = helper.registry.execute_expect_success(false);
         let output: Vec<(Decimal, u64)> = receipt.outputs("sync");
 
-        assert_eq!(output, vec![(dec!(0.2), 180)]);
+        assert_eq!(output, vec![(dec!(0.2), 132)]);
     }
 
     #[test]
@@ -208,7 +208,7 @@ mod precision_pool_sync {
             .registry
             .withdraw_protocol_fees_success(dec!(0), dec!(0));
 
-        helper.advance_timestamp_by_seconds(5321);
+        helper.advance_timestamp_by_seconds(5701);
 
         helper.swap_success(SwapType::BuyX, dec!(4), dec!(2.505473242730227614), dec!(0));
         helper.registry.load_owner_auth();
