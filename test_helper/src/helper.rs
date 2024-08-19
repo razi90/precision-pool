@@ -1238,12 +1238,20 @@ impl PoolTestHelper {
         self.set_metadata("registry_components", value)
     }
 
+    pub fn lock_whitelist_registry(&mut self) -> &mut PoolTestHelper {
+        self.lock_metadata("registry_components")
+    }
+
     pub fn set_whitelist_hook(&mut self, package_name: &str) -> &mut PoolTestHelper {
         self.set_whitelist_packages("hook_packages", vec![package_name])
     }
 
     pub fn set_whitelist_hook_value(&mut self, value: impl ToMetadataEntry) -> &mut PoolTestHelper {
         self.set_metadata("hook_packages", value)
+    }
+
+    pub fn lock_whitelist_hook(&mut self) -> &mut PoolTestHelper {
+        self.lock_metadata("hook_packages")
     }
 
     pub fn set_whitelist_packages(
@@ -1274,6 +1282,21 @@ impl PoolTestHelper {
             )
             .set_metadata(precision_pool_package_address, key, value);
         self.registry.env.new_instruction("set_metadata", 2, 1);
+        self
+    }
+
+    pub fn lock_metadata(&mut self, key: impl Into<String>) -> &mut PoolTestHelper {
+        let precision_pool_package_address: GlobalAddress =
+            self.registry.env.package_address("precision_pool").into();
+        let manifest_builder = mem::take(&mut self.registry.env.manifest_builder);
+        self.registry.env.manifest_builder = manifest_builder
+            .create_proof_from_account_of_amount(
+                self.registry.env().account,
+                self.admin_badge_address(),
+                dec!(1),
+            )
+            .lock_metadata(precision_pool_package_address, key);
+        self.registry.env.new_instruction("lock_metadata", 2, 1);
         self
     }
 }
