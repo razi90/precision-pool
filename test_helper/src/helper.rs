@@ -1250,6 +1250,10 @@ impl PoolTestHelper {
         self.set_metadata("hook_packages", value)
     }
 
+    pub fn lock_whitelist_hook(&mut self) -> &mut PoolTestHelper {
+        self.lock_metadata("hook_packages")
+    }
+
     pub fn set_whitelist_packages(
         &mut self,
         metadata_key: &str,

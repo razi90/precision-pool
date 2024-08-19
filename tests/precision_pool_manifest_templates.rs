@@ -138,8 +138,10 @@ mod precision_pool_manifest_templates {
         let mut helper: PoolTestHelper = PoolTestHelper::new();
         helper.set_whitelist_registry();
         helper.lock_whitelist_registry();
+        helper.set_whitelist_hook_value(Vec::<GlobalAddress>::new());
         // just use registry as dummy package for hook, since it is already loaded in the environment
         helper.set_whitelist_hook("registry");
+        helper.lock_whitelist_hook();
         let manifest_builder = mem::take(&mut helper.registry.env.manifest_builder)
             .deposit_batch(helper.registry.env.account);
         dump_manifest_to_file_system(
