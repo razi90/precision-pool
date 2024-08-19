@@ -137,7 +137,8 @@ mod precision_pool_manifest_templates {
     fn test_dump_set_whitelist() {
         let mut helper: PoolTestHelper = PoolTestHelper::new();
         helper.set_whitelist_registry();
-        // just use registry as dummy package, since it is already loaded in the environment
+        helper.lock_whitelist_registry();
+        // just use registry as dummy package for hook, since it is already loaded in the environment
         helper.set_whitelist_hook("registry");
         let manifest_builder = mem::take(&mut helper.registry.env.manifest_builder)
             .deposit_batch(helper.registry.env.account);
