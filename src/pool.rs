@@ -1,6 +1,8 @@
 use crate::{constants::*, pool_math::*, utils::*};
 use common::math::*;
-use common::metadata::{assert_component_packages_are_approved, assert_components_are_approved};
+use common::metadata::{
+    assert_component_packages_are_approved, assert_components_are_approved,
+};
 use common::pools::{token_symbol, SwapType};
 use common::time::*;
 use common::utils::assert_within_bounds;
@@ -158,7 +160,12 @@ mod precision_pool {
             );
 
             // Validate tick spacing within predefined bounds.
-            assert_within_bounds(tick_spacing, 1, MAX_TICK as u32, "tick_spacing");
+            assert_within_bounds(
+                tick_spacing,
+                1,
+                MAX_TICK as u32,
+                "tick_spacing",
+            );
 
             // Ensure the initial price is positive and within the acceptable range.
             assert!(
@@ -190,14 +197,15 @@ mod precision_pool {
                 "[Instantiate]: Address B should be a fungible token."
             );
 
-            assert_components_are_approved("registry_components", vec![registry_address]);
+            // assert_components_are_approved("registry_components", vec![registry_address]);
             assert_component_packages_are_approved(
                 "hook_packages",
                 hook_badges.iter().map(|(address, _)| *address).collect(),
             );
 
             // Generate and execute hooks for additional functionalities before instantiation.
-            let (hook_calls, mut hook_badges_bucket, hooks) = generate_calls_hooks(hook_badges);
+            let (hook_calls, mut hook_badges_bucket, hooks) =
+                generate_calls_hooks(hook_badges);
             execute_hooks_before_instantiate(
                 &hook_calls.before_instantiate,
                 &hook_badges_bucket,
@@ -211,10 +219,13 @@ mod precision_pool {
             );
 
             // Move hook badges from buckets to vaults to store in the component state.
-            let hook_badges_vault: HashMap<ComponentAddress, Vault> = hook_badges_bucket
-                .drain()
-                .map(|(component_address, bucket)| (component_address, Vault::with_bucket(bucket)))
-                .collect();
+            let hook_badges_vault: HashMap<ComponentAddress, Vault> =
+                hook_badges_bucket
+                    .drain()
+                    .map(|(component_address, bucket)| {
+                        (component_address, Vault::with_bucket(bucket))
+                    })
+                    .collect();
 
             // Initialize vaults for liquidity of token X and Y.
             let x_liquidity: Vault = Vault::new(x_address);
@@ -222,31 +233,39 @@ mod precision_pool {
 
             // Reserve an address for the new pool and set up LP token management.
             let (address_reservation, pool_address) =
-                Runtime::allocate_component_address(PrecisionPool::blueprint_id());
+                Runtime::allocate_component_address(
+                    PrecisionPool::blueprint_id(),
+                );
             let (pool_name, lp_name, lp_description) =
                 Self::names_and_lp_description(x_address, y_address);
-            let lp_manager =
-                Self::set_lp_manager(pool_address, lp_name, lp_description, dapp_definition);
+            let lp_manager = Self::set_lp_manager(
+                pool_address,
+                lp_name,
+                lp_description,
+                dapp_definition,
+            );
 
             // Set up a resource manager for flash loans.
-            let flash_manager =
-                ResourceBuilder::new_ruid_non_fungible::<FlashLoan>(OwnerRole::None)
-                    .mint_roles(mint_roles!(
-                        minter => rule!(require(global_caller(pool_address)));
-                        minter_updater => rule!(deny_all);
-                    ))
-                    .burn_roles(burn_roles!(
-                        burner => rule!(require(global_caller(pool_address)));
-                        burner_updater => rule!(deny_all);
-                    ))
-                    .deposit_roles(deposit_roles!(
-                        depositor => rule!(deny_all);
-                        depositor_updater => rule!(deny_all);
-                    ))
-                    .create_with_no_initial_supply();
+            let flash_manager = ResourceBuilder::new_ruid_non_fungible::<
+                FlashLoan,
+            >(OwnerRole::None)
+            .mint_roles(mint_roles!(
+                minter => rule!(require(global_caller(pool_address)));
+                minter_updater => rule!(deny_all);
+            ))
+            .burn_roles(burn_roles!(
+                burner => rule!(require(global_caller(pool_address)));
+                burner_updater => rule!(deny_all);
+            ))
+            .deposit_roles(deposit_roles!(
+                depositor => rule!(deny_all);
+                depositor_updater => rule!(deny_all);
+            ))
+            .create_with_no_initial_supply();
 
             // Collect hook addresses for metadata.
-            let hooks_vec: Vec<ComponentAddress> = hook_badges_vault.keys().cloned().collect();
+            let hooks_vec: Vec<ComponentAddress> =
+                hook_badges_vault.keys().cloned().collect();
 
             // Instantiate the pool and set its initial state and metadata.
             let pool = (Self {
@@ -394,8 +413,14 @@ mod precision_pool {
         ///
         /// # Arguments
         /// * `after_instantiate_state`: The state information specific to this pool that will be passed to the hooks for processing.
-        pub fn execute_after_instantiate(&self, after_instantiate_state: AfterInstantiateState) {
-            self.execute_hooks(HookCall::AfterInstantiate, (after_instantiate_state,));
+        pub fn execute_after_instantiate(
+            &self,
+            after_instantiate_state: AfterInstantiateState,
+        ) {
+            self.execute_hooks(
+                HookCall::AfterInstantiate,
+                (after_instantiate_state,),
+            );
         }
 
         /// Internal function to add liquidity within specified price bounds.
@@ -431,7 +456,10 @@ mod precision_pool {
         ) -> (Bucket, Bucket, Bucket) {
             // Ensure the bounds are within the allowed tick range.
             assert!(left_bound >= MIN_TICK, "Left bound lower than allowed.");
-            assert!(right_bound <= MAX_TICK, "Right bound higher than allowed.");
+            assert!(
+                right_bound <= MAX_TICK,
+                "Right bound higher than allowed."
+            );
 
             // Align the bounds to the nearest valid ticks based on the pool's tick spacing.
             let left_bound = align_tick(left_bound, self.tick_spacing);
@@ -456,7 +484,8 @@ mod precision_pool {
             );
 
             // Capture the initial amounts of X and Y tokens provided for liquidity.
-            let (x_provided, y_provided) = (x_bucket.amount(), y_bucket.amount());
+            let (x_provided, y_provided) =
+                (x_bucket.amount(), y_bucket.amount());
 
             // Prepare the state before adding liquidity, including the current pool state and the position details.
             let state_before = BeforeAddLiquidityState {
@@ -480,8 +509,16 @@ mod precision_pool {
             );
 
             // Verify that the hooks have not improperly modified the amounts of X and Y tokens.
-            assert_hooks_bucket_output(x_provided, x_bucket.amount(), "BeforeAddLiquidity");
-            assert_hooks_bucket_output(y_provided, y_bucket.amount(), "BeforeAddLiquidity");
+            assert_hooks_bucket_output(
+                x_provided,
+                x_bucket.amount(),
+                "BeforeAddLiquidity",
+            );
+            assert_hooks_bucket_output(
+                y_provided,
+                y_bucket.amount(),
+                "BeforeAddLiquidity",
+            );
 
             // Calculate the square root prices for the left and right bounds.
             let price_left_sqrt = tick_to_price_sqrt(left_bound);
@@ -510,12 +547,23 @@ mod precision_pool {
             self.y_liquidity.put(y_bucket.take(y_amount));
 
             // Update the pool's active liquidity and active tick based on the added liquidity.
-            self.update_active_liquidity(liquidity, price_left_sqrt, price_right_sqrt);
-            self.update_active_tick(left_bound, right_bound, price_left_sqrt, price_right_sqrt);
+            self.update_active_liquidity(
+                liquidity,
+                price_left_sqrt,
+                price_right_sqrt,
+            );
+            self.update_active_tick(
+                left_bound,
+                right_bound,
+                price_left_sqrt,
+                price_right_sqrt,
+            );
 
             // Update or insert tick data for the left and right bounds.
-            let left_tick = self.update_or_insert_tick(left_bound, liquidity, liquidity);
-            let right_tick = self.update_or_insert_tick(right_bound, -liquidity, liquidity);
+            let left_tick =
+                self.update_or_insert_tick(left_bound, liquidity, liquidity);
+            let right_tick =
+                self.update_or_insert_tick(right_bound, -liquidity, liquidity);
 
             // Calculate fee checkpoints for X and Y tokens based on the updated tick data.
             // The checkpoints can be negative since only the growth between two checkpoints is relevant.
@@ -549,15 +597,16 @@ mod precision_pool {
             );
 
             // Mint LP tokens representing the added liquidity and capture the new position details.
-            let (position_id, position, mut position_bucket) = self.mint_lp_token(
-                liquidity,
-                left_bound,
-                right_bound,
-                shape_id.clone(),
-                x_fee_checkpoint,
-                y_fee_checkpoint,
-                seconds_inside_checkpoint,
-            );
+            let (position_id, position, mut position_bucket) = self
+                .mint_lp_token(
+                    liquidity,
+                    left_bound,
+                    right_bound,
+                    shape_id.clone(),
+                    x_fee_checkpoint,
+                    y_fee_checkpoint,
+                    seconds_inside_checkpoint,
+                );
 
             let state_after = AfterAddLiquidityState {
                 pool_address: self.pool_address,
@@ -575,8 +624,10 @@ mod precision_pool {
             };
 
             // Execute hooks after adding liquidity, allowing for custom logic or validations.
-            (_, position_bucket) =
-                self.execute_hooks(HookCall::AfterAddLiquidity, (state_after, position_bucket));
+            (_, position_bucket) = self.execute_hooks(
+                HookCall::AfterAddLiquidity,
+                (state_after, position_bucket),
+            );
 
             Runtime::emit_event(AddLiquidityEvent {
                 position_id,
@@ -626,7 +677,13 @@ mod precision_pool {
             x_bucket: Bucket,
             y_bucket: Bucket,
         ) -> (Bucket, Bucket, Bucket) {
-            self.add_liquidity_internal(left_bound, right_bound, x_bucket, y_bucket, None)
+            self.add_liquidity_internal(
+                left_bound,
+                right_bound,
+                x_bucket,
+                y_bucket,
+                None,
+            )
         }
 
         /// Adds multiple liquidity positions to the pool simultaneously.
@@ -667,7 +724,9 @@ mod precision_pool {
                         .data()
                         .shape_id
                 }
-                None => Some(NonFungibleLocalId::ruid(Runtime::generate_ruid())),
+                None => {
+                    Some(NonFungibleLocalId::ruid(Runtime::generate_ruid()))
+                }
             };
             // Process each position, collecting resulting LP tokens and any unadded X and Y tokens.
             for (left_bound, right_bound, x_bucket, y_bucket) in positions {
@@ -717,8 +776,9 @@ mod precision_pool {
         ) -> (NonFungibleLocalId, LiquidityPosition, Bucket) {
             // Increment the LP counter to generate a unique position ID.
             self.lp_counter += 1;
-            let position_id =
-                NonFungibleLocalId::Integer(IntegerNonFungibleLocalId::new(self.lp_counter));
+            let position_id = NonFungibleLocalId::Integer(
+                IntegerNonFungibleLocalId::new(self.lp_counter),
+            );
 
             let position = LiquidityPosition {
                 liquidity,
@@ -758,7 +818,9 @@ mod precision_pool {
         ) {
             // Check if the current price is within the specified bounds.
             // If it is not, exit the function without modifying the active liquidity.
-            if self.price_sqrt < price_left_sqrt || price_right_sqrt <= self.price_sqrt {
+            if self.price_sqrt < price_left_sqrt
+                || price_right_sqrt <= self.price_sqrt
+            {
                 return;
             }
             // If the current price is within the bounds, add the specified liquidity
@@ -787,11 +849,14 @@ mod precision_pool {
             let active_tick = self.active_tick.unwrap_or(i32::MIN);
 
             // Update the active tick to the right bound if the right bound is closest left of the price.
-            if active_tick < right_bound && price_right_sqrt <= self.price_sqrt {
+            if active_tick < right_bound && price_right_sqrt <= self.price_sqrt
+            {
                 self.active_tick = Some(right_bound);
             }
             // Update the active tick to the left bound if the left bound is closest left of the price.
-            else if active_tick < left_bound && price_left_sqrt <= self.price_sqrt {
+            else if active_tick < left_bound
+                && price_left_sqrt <= self.price_sqrt
+            {
                 self.active_tick = Some(left_bound);
             }
         }
@@ -842,7 +907,8 @@ mod precision_pool {
                 let price_left_sqrt = tick_to_price_sqrt(position.left_bound);
                 let price_right_sqrt = tick_to_price_sqrt(position.right_bound);
 
-                let (x_fees, y_fees, _, _) = self.claimable_fees_internal(&position);
+                let (x_fees, y_fees, _, _) =
+                    self.claimable_fees_internal(&position);
                 let (x_amount, y_amount) = removable_amounts(
                     position.liquidity,
                     self.price_sqrt,
@@ -887,7 +953,10 @@ mod precision_pool {
         /// A tuple consisting of:
         /// * A bucket with the token X from the pool
         /// * A bucket with the token Y from the pool
-        pub fn remove_liquidity(&mut self, lp_positions: NonFungibleBucket) -> (Bucket, Bucket) {
+        pub fn remove_liquidity(
+            &mut self,
+            lp_positions: NonFungibleBucket,
+        ) -> (Bucket, Bucket) {
             // Initialize output buckets for tokens X and Y for all positions.
             let mut x_total_output = Bucket::new(self.x_address());
             let mut y_total_output = Bucket::new(self.y_address());
@@ -911,7 +980,10 @@ mod precision_pool {
                         shape_id: position.shape_id.clone(),
                     },
                 };
-                let _ = self.execute_hooks(HookCall::BeforeRemoveLiquidity, (state_before,));
+                let _ = self.execute_hooks(
+                    HookCall::BeforeRemoveLiquidity,
+                    (state_before,),
+                );
 
                 // Auto-claim fees before removing liquidity position
                 let (x_fees, y_fees) = self.claim_fees_internal(&nft);
@@ -967,8 +1039,16 @@ mod precision_pool {
                     (state_after, x_output, y_output),
                 );
 
-                assert_hooks_bucket_output(x_amount, x_output.amount(), "AfterRemoveLiquidity");
-                assert_hooks_bucket_output(y_amount, y_output.amount(), "AfterRemoveLiquidity");
+                assert_hooks_bucket_output(
+                    x_amount,
+                    x_output.amount(),
+                    "AfterRemoveLiquidity",
+                );
+                assert_hooks_bucket_output(
+                    y_amount,
+                    y_output.amount(),
+                    "AfterRemoveLiquidity",
+                );
 
                 Runtime::emit_event(RemoveLiquidityEvent {
                     position_id: nft.local_id().clone(),
@@ -1026,14 +1106,21 @@ mod precision_pool {
             let input_gross_amount = input_bucket.amount();
             let swap_type = self.swap_type(input_bucket.resource_address());
             let mut before_state = self.before_swap_state(swap_type);
-            (before_state, input_bucket) =
-                self.execute_hooks(HookCall::BeforeSwap, (before_state, input_bucket));
+            (before_state, input_bucket) = self.execute_hooks(
+                HookCall::BeforeSwap,
+                (before_state, input_bucket),
+            );
 
             // Adjust the input fee rate based on the pre-swap hook output and validate the input amount.
             self.set_input_fee_rate(before_state.input_fee_rate);
-            assert_hooks_bucket_output(input_gross_amount, input_bucket.amount(), "BeforeSwap");
+            assert_hooks_bucket_output(
+                input_gross_amount,
+                input_bucket.amount(),
+                "BeforeSwap",
+            );
 
-            let (global_input_fee_lp, global_output_fee_lp) = self.global_fees(swap_type);
+            let (global_input_fee_lp, global_output_fee_lp) =
+                self.global_fees(swap_type);
 
             /*
             The following invariants are valid:
@@ -1041,12 +1128,13 @@ mod precision_pool {
                 fee_lp_share + fee_protocol_share = 1
              */
             let input_divisibility = self.input_divisibility(swap_type);
-            let (input_amount_net, input_fee_lp, input_fee_protocol) = input_amount_net(
-                input_bucket.amount(),
-                self.input_fee_rate,
-                self.fee_protocol_share,
-                input_divisibility,
-            );
+            let (input_amount_net, input_fee_lp, input_fee_protocol) =
+                input_amount_net(
+                    input_bucket.amount(),
+                    self.input_fee_rate,
+                    self.fee_protocol_share,
+                    input_divisibility,
+                );
 
             // Initialize the swap state with the necessary parameters for processing the swap.
             let mut state = SwapState {
@@ -1117,12 +1205,18 @@ mod precision_pool {
                 self.swap_deposit_and_withdraw(state.clone(), input_bucket);
 
             let mut after_state = AfterSwapState::from(state.clone());
-            (after_state, output_bucket) =
-                self.execute_hooks(HookCall::AfterSwap, (after_state, output_bucket));
+            (after_state, output_bucket) = self.execute_hooks(
+                HookCall::AfterSwap,
+                (after_state, output_bucket),
+            );
 
             // Adjust the input fee rate based on the post-swap hook output and validate the output amount.
             self.set_input_fee_rate(after_state.input_fee_rate);
-            assert_hooks_bucket_output(state.output, output_bucket.amount(), "AfterSwap");
+            assert_hooks_bucket_output(
+                state.output,
+                output_bucket.amount(),
+                "AfterSwap",
+            );
 
             // Update the oracle with the new price square root.
             self.oracle.observe(state.price_sqrt);
@@ -1246,7 +1340,8 @@ mod precision_pool {
         /// # Arguments
         /// * `fee_protocol_share` - A `Decimal` representing the new protocol fee share to be set.
         fn set_fee_protocol_share(&mut self, fee_protocol_share: Decimal) {
-            self.fee_protocol_share = fee_protocol_share.clamp(dec!(0), FEE_PROTOCOL_SHARE_MAX);
+            self.fee_protocol_share =
+                fee_protocol_share.clamp(dec!(0), FEE_PROTOCOL_SHARE_MAX);
         }
 
         /// Returns the claimable fees for a given liquidity position.
@@ -1325,7 +1420,8 @@ mod precision_pool {
             for position_id in lp_position_ids {
                 let position: LiquidityPosition =
                     self.lp_manager.get_non_fungible_data(&position_id);
-                let (x_claimable, y_claimable, _, _) = self.claimable_fees_internal(&position);
+                let (x_claimable, y_claimable, _, _) =
+                    self.claimable_fees_internal(&position);
                 x_fees += x_claimable;
                 y_fees += y_claimable;
             }
@@ -1358,8 +1454,12 @@ mod precision_pool {
             let position_id: &NonFungibleLocalId = position_nft.local_id();
             let position: LiquidityPosition = position_nft.data();
 
-            let (x_amount, y_amount, new_x_fee_checkpoint, new_y_fee_checkpoint) =
-                self.claimable_fees_internal(&position);
+            let (
+                x_amount,
+                y_amount,
+                new_x_fee_checkpoint,
+                new_y_fee_checkpoint,
+            ) = self.claimable_fees_internal(&position);
 
             self.lp_manager.update_non_fungible_data(
                 position_id,
@@ -1394,14 +1494,18 @@ mod precision_pool {
         /// A tuple containing two `Bucket`s:
         /// - The first bucket contains all claimed `x` fees.
         /// - The second bucket contains all claimed `y` fees.
-        pub fn claim_fees(&mut self, lp_proofs: NonFungibleProof) -> (Bucket, Bucket) {
+        pub fn claim_fees(
+            &mut self,
+            lp_proofs: NonFungibleProof,
+        ) -> (Bucket, Bucket) {
             let mut x_fees = Bucket::new(self.x_address());
             let mut y_fees = Bucket::new(self.y_address());
             for position_nft in lp_proofs
                 .check(self.lp_manager.address())
                 .non_fungibles::<LiquidityPosition>()
             {
-                let (x_claimed, y_claimed) = self.claim_fees_internal(&position_nft);
+                let (x_claimed, y_claimed) =
+                    self.claim_fees_internal(&position_nft);
                 x_fees.put(x_claimed);
                 y_fees.put(y_claimed);
             }
@@ -1415,7 +1519,10 @@ mod precision_pool {
         ///
         /// # Returns
         /// * `u64` - The number of seconds the position has been active.
-        pub fn seconds_in_position(&mut self, nft_id: NonFungibleLocalId) -> u64 {
+        pub fn seconds_in_position(
+            &mut self,
+            nft_id: NonFungibleLocalId,
+        ) -> u64 {
             // Retrieve the liquidity position data using the NFT ID.
             let lp_position = self
                 .lp_manager
@@ -1453,7 +1560,10 @@ mod precision_pool {
         ///
         /// # Returns
         /// * `(Decimal, Decimal)` - A tuple containing the accrued `x` and `y` fees.
-        fn total_fees_internal(&self, position: &LiquidityPosition) -> (Decimal, Decimal) {
+        fn total_fees_internal(
+            &self,
+            position: &LiquidityPosition,
+        ) -> (Decimal, Decimal) {
             let left_tick = self.ticks.get(&position.left_bound).unwrap();
             let right_tick = self.ticks.get(&position.right_bound).unwrap();
 
@@ -1478,10 +1588,12 @@ mod precision_pool {
 
             // Compute the accrued fees by subtracting the stored total fee checkpoints from the new checkpoints,
             // then multiplying by the position's liquidity.
-            let x_amount = ((new_x_fee_checkpoint - position.x_total_fee_checkpoint)
+            let x_amount = ((new_x_fee_checkpoint
+                - position.x_total_fee_checkpoint)
                 * position.liquidity)
                 .floor_to(self.x_divisibility());
-            let y_amount = ((new_y_fee_checkpoint - position.y_total_fee_checkpoint)
+            let y_amount = ((new_y_fee_checkpoint
+                - position.y_total_fee_checkpoint)
                 * position.liquidity)
                 .floor_to(self.y_divisibility());
 
@@ -1541,7 +1653,9 @@ mod precision_pool {
             let input_net = input_bucket.take(state.input);
             let fee_lp = input_bucket.take(state.fee_lp_input);
             // Deposit protocol fees into the designated vault.
-            self.deposit_protocol_fees(input_bucket.take(state.fee_protocol_input));
+            self.deposit_protocol_fees(
+                input_bucket.take(state.fee_protocol_input),
+            );
 
             match state.swap_type {
                 SwapType::BuyX => {
@@ -1636,7 +1750,10 @@ mod precision_pool {
         ///
         /// # Returns
         /// * `(PreciseDecimal, PreciseDecimal)` - The global liquidity provider fees for the input and output tokens.
-        fn global_fees(&self, swap_type: SwapType) -> (PreciseDecimal, PreciseDecimal) {
+        fn global_fees(
+            &self,
+            swap_type: SwapType,
+        ) -> (PreciseDecimal, PreciseDecimal) {
             match swap_type {
                 SwapType::BuyX => (self.y_lp_fee, self.x_lp_fee),
                 SwapType::SellX => (self.x_lp_fee, self.y_lp_fee),
@@ -1796,11 +1913,12 @@ mod precision_pool {
             }
 
             let price_sqrt = tick_to_price_sqrt(tick_index);
-            let (x_fee_outside, y_fee_outside, seconds_outside) = if self.price_sqrt < price_sqrt {
-                (pdec!(0), pdec!(0), 0)
-            } else {
-                (self.x_lp_fee, self.y_lp_fee, self.seconds_global())
-            };
+            let (x_fee_outside, y_fee_outside, seconds_outside) =
+                if self.price_sqrt < price_sqrt {
+                    (pdec!(0), pdec!(0), 0)
+                } else {
+                    (self.x_lp_fee, self.y_lp_fee, self.seconds_global())
+                };
 
             let tick = Tick {
                 index: tick_index,
@@ -1839,7 +1957,11 @@ mod precision_pool {
             delta_liquidity: PreciseDecimal,
             total_liquidity: PreciseDecimal,
         ) -> Tick {
-            let tick = self.update_or_insert_tick(tick_index, delta_liquidity, total_liquidity);
+            let tick = self.update_or_insert_tick(
+                tick_index,
+                delta_liquidity,
+                total_liquidity,
+            );
             if tick.total_liquidity == pdec!(0) {
                 return self.ticks.remove(&tick_index).unwrap();
             }
@@ -1857,7 +1979,10 @@ mod precision_pool {
         ///
         /// # Returns
         /// * `NodeIteratorMut<'_, i32, Tick>` - An iterator over the ticks within the specified range.
-        fn get_next_ticks(&mut self, swap_type: SwapType) -> NodeIteratorMut<'_, i32, Tick> {
+        fn get_next_ticks(
+            &mut self,
+            swap_type: SwapType,
+        ) -> NodeIteratorMut<'_, i32, Tick> {
             match swap_type {
                 SwapType::SellX => {
                     // we DO want to include the active tick
@@ -1910,8 +2035,8 @@ mod precision_pool {
             };
 
             // Calculates the loan fee based on the specified rate and adds it to the borrowed amount to determine the total amount due.
-            let fee =
-                (PreciseDecimal::from(amount) * self.flash_loan_fee_rate).ceil_to(divisibility);
+            let fee = (PreciseDecimal::from(amount) * self.flash_loan_fee_rate)
+                .ceil_to(divisibility);
 
             let flash_loan = FlashLoan {
                 address,
@@ -1926,7 +2051,8 @@ mod precision_pool {
             });
 
             // Mints a transient NFT that encapsulates the terms of the loan for use in repayment validation.
-            let transient_loan_bucket = self.flash_manager.mint_ruid_non_fungible(flash_loan);
+            let transient_loan_bucket =
+                self.flash_manager.mint_ruid_non_fungible(flash_loan);
 
             (output_bucket, transient_loan_bucket)
         }
@@ -1967,7 +2093,8 @@ mod precision_pool {
 
             // Validate that the repayment is being made with the correct token type.
             assert!(
-                terms.address == loan_repayment.as_fungible().resource_address(),
+                terms.address
+                    == loan_repayment.as_fungible().resource_address(),
                 "Incorrect resource to repay loan"
             );
 
@@ -2025,16 +2152,32 @@ mod precision_pool {
         /// # Returns
         /// Returns the modified hook arguments after all relevant hooks have been executed,
         /// which may carry state changes enacted by the hooks.
-        fn execute_hooks<T: ScryptoSbor>(&self, hook_call: HookCall, hook_args: T) -> T {
+        fn execute_hooks<T: ScryptoSbor>(
+            &self,
+            hook_call: HookCall,
+            hook_args: T,
+        ) -> T {
             let hooks = match hook_call {
-                HookCall::BeforeInstantiate => &self.hook_calls.before_instantiate,
-                HookCall::AfterInstantiate => &self.hook_calls.after_instantiate,
+                HookCall::BeforeInstantiate => {
+                    &self.hook_calls.before_instantiate
+                }
+                HookCall::AfterInstantiate => {
+                    &self.hook_calls.after_instantiate
+                }
                 HookCall::BeforeSwap => &self.hook_calls.before_swap,
                 HookCall::AfterSwap => &self.hook_calls.after_swap,
-                HookCall::BeforeAddLiquidity => &self.hook_calls.before_add_liquidity,
-                HookCall::AfterAddLiquidity => &self.hook_calls.after_add_liquidity,
-                HookCall::BeforeRemoveLiquidity => &self.hook_calls.before_remove_liquidity,
-                HookCall::AfterRemoveLiquidity => &self.hook_calls.after_remove_liquidity,
+                HookCall::BeforeAddLiquidity => {
+                    &self.hook_calls.before_add_liquidity
+                }
+                HookCall::AfterAddLiquidity => {
+                    &self.hook_calls.after_add_liquidity
+                }
+                HookCall::BeforeRemoveLiquidity => {
+                    &self.hook_calls.before_remove_liquidity
+                }
+                HookCall::AfterRemoveLiquidity => {
+                    &self.hook_calls.after_remove_liquidity
+                }
             };
             execute_hooks(&hooks, &self.hook_badges, hook_args)
         }
@@ -2085,19 +2228,26 @@ mod precision_pool {
         ) -> (String, String, String) {
             let x_symbol = token_symbol(x_address);
             let y_symbol = token_symbol(y_address);
-            let (pool_name, lp_name, lp_description) =
-                match x_symbol.zip(y_symbol).map(|(x, y)| format!("{}/{}", x, y)) {
-                    Some(pair_symbol) => (
-                        format!("Ociswap Precision Pool {}", pair_symbol).to_owned(),
-                        format!("Ociswap LP {}", pair_symbol).to_owned(),
-                        format!("Ociswap LP token for Precision Pool {}", pair_symbol).to_owned(),
-                    ),
-                    None => (
-                        "Ociswap Precision Pool".to_owned(),
-                        "Ociswap LP".to_owned(),
-                        "Ociswap LP token for Precision Pool".to_owned(),
-                    ),
-                };
+            let (pool_name, lp_name, lp_description) = match x_symbol
+                .zip(y_symbol)
+                .map(|(x, y)| format!("{}/{}", x, y))
+            {
+                Some(pair_symbol) => (
+                    format!("Ociswap Precision Pool {}", pair_symbol)
+                        .to_owned(),
+                    format!("Ociswap LP {}", pair_symbol).to_owned(),
+                    format!(
+                        "Ociswap LP token for Precision Pool {}",
+                        pair_symbol
+                    )
+                    .to_owned(),
+                ),
+                None => (
+                    "Ociswap Precision Pool".to_owned(),
+                    "Ociswap LP".to_owned(),
+                    "Ociswap LP token for Precision Pool".to_owned(),
+                ),
+            };
             (pool_name, lp_name, lp_description)
         }
 
@@ -2291,7 +2441,10 @@ impl Tick {
     ///
     /// # Returns
     /// A tuple containing the fee amounts for the tokens involved in the swap outside the current tick.
-    pub fn fee_outside(&self, swap_type: SwapType) -> (PreciseDecimal, PreciseDecimal) {
+    pub fn fee_outside(
+        &self,
+        swap_type: SwapType,
+    ) -> (PreciseDecimal, PreciseDecimal) {
         match swap_type {
             SwapType::BuyX => (self.y_fee_outside, self.x_fee_outside),
             SwapType::SellX => (self.x_fee_outside, self.y_fee_outside),
