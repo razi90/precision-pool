@@ -1,8 +1,6 @@
 use crate::{constants::*, pool_math::*, utils::*};
 use common::math::*;
-use common::metadata::{
-    assert_component_packages_are_approved, assert_components_are_approved,
-};
+use common::metadata::assert_component_packages_are_approved;
 use common::pools::{token_symbol, SwapType};
 use common::time::*;
 use common::utils::assert_within_bounds;
